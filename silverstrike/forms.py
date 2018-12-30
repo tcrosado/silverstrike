@@ -122,7 +122,7 @@ class TransferForm(TransactionForm):
 
 class WithdrawForm(TransactionForm):
     dst = forms.CharField(max_length=64, label=_('Debitor'),
-                                          widget=forms.TextInput(attrs={'autocomplete': 'off'}))
+                          widget=forms.TextInput(attrs={'autocomplete': 'off'}))
 
     def clean_dst(self):
         account, _ = models.Account.objects.get_or_create(
@@ -137,7 +137,7 @@ class WithdrawForm(TransactionForm):
 
 class DepositForm(TransactionForm):
     src = forms.CharField(max_length=64, label=_('Creditor'),
-                                     widget=forms.TextInput(attrs={'autocomplete': 'off'}))
+                          widget=forms.TextInput(attrs={'autocomplete': 'off'}))
 
     def clean_src(self):
         account, _ = models.Account.objects.get_or_create(name=self.cleaned_data['src'],
@@ -208,9 +208,11 @@ class ReconcilationForm(forms.ModelForm):
         transaction.save()
 
         models.Split.objects.create(transaction=transaction, amount=-amount,
-                                    account=transaction.src, opposing_account=transaction.dst, title=transaction.title)
+                                    account=transaction.src, opposing_account=transaction.dst,
+                                    title=transaction.title)
         models.Split.objects.create(transaction=transaction, amount=amount,
-                                    account=transaction.dst, opposing_account=transaction.src, title=transaction.title)
+                                    account=transaction.dst, opposing_account=transaction.src,
+                                    title=transaction.title)
         return transaction
 
     def clean(self):
