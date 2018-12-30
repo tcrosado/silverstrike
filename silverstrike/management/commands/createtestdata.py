@@ -12,7 +12,10 @@ from silverstrike.models import Account, Category, RecurringTransaction, Split, 
 def _create_transaction(date, amount, src, dst, title, category, type, recurrence):
     transaction = Transaction.objects.create(title=title, date=date,
                                              transaction_type=type,
-                                             recurrence=recurrence)
+                                             recurrence=recurrence,
+                                             src=src,
+                                             dst=dst,
+                                             amount=amount)
     Split.objects.create(account=src, opposing_account=dst, transaction=transaction,
                          amount=-amount, category=category, date=date, title=title)
     Split.objects.create(account=dst, opposing_account=src, transaction=transaction,
