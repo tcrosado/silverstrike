@@ -133,6 +133,11 @@
                 <i class="fa fa-pie-chart" aria-hidden="true"></i>
                 <span>{% trans 'Charts' %}</span>
               </a>
+            <li{% if menu == "investments" %} class="active"{% endif %}>
+              <a href="{% url 'investments' %}">
+                <i class="fa fa-line-chart" arial-hidden="true"></i>
+                <span>{% trans 'Investments' %}</span>
+              </a>
             <li class="treeview{% if menu == "settings" %} active{% endif %}">
               <a href="#">
                 <i class="fa fa-file-o fa-fw"></i>

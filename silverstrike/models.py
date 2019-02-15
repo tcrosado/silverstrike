@@ -7,6 +7,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 
+   
+
 
 class AccountQuerySet(models.QuerySet):
     def personal(self):
@@ -23,7 +25,6 @@ class AccountQuerySet(models.QuerySet):
 
     def shown_on_dashboard(self):
         return self.filter(show_on_dashboard=True)
-
 
 class Account(models.Model):
     PERSONAL = 1
