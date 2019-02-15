@@ -15,11 +15,13 @@ from silverstrike.views import index as general_views
 from silverstrike.views import recurrences as recurrence_views
 from silverstrike.views import reports as report_views
 from silverstrike.views import transactions as transaction_views
+from silverstrike.views import investments as investment_views
 
 
 router = routers.DefaultRouter()
 router.register(r'accounts', rest_views.AccountViewSet)
 router.register(r'transactions', rest_views.TransactionViewSet)
+#FIXME router.register(r'investments', rest_views.InvestmentViewSet)
 router.register(r'categories', rest_views.CategoryViewSet)
 router.register(r'recurrences', rest_views.RecurringTransactionsViewset)
 
@@ -65,6 +67,10 @@ urlpatterns = [
          account_views.ForeignAccountCreate.as_view(), name='foreign_account_new'),
     path('accounts/new/', account_views.AccountCreate.as_view(), name='account_new'),
     path('accounts/', account_views.AccountIndex.as_view(), name='accounts'),
+
+    path('investments/',
+          investment_views.InvestmentView.as_view(), name='investments'),
+
 
     path('recurrences/',
          recurrence_views.RecurringTransactionIndex.as_view(), name='recurrences'),
