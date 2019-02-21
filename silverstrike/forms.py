@@ -15,7 +15,7 @@ class ImportUploadForm(forms.ModelForm):
 class AccountCreateForm(forms.ModelForm):
     class Meta:
         model = models.Account
-        fields = ['name', 'initial_balance', 'active', 'show_on_dashboard']
+        fields = ['name', 'iban', 'initial_balance', 'active', 'show_on_dashboard']
 
     initial_balance = forms.DecimalField(max_digits=10, decimal_places=2, initial=0)
 

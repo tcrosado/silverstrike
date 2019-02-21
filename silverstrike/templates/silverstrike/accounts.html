@@ -21,6 +21,7 @@
     <table class="table table-striped">
       <tr>
         <th>{% trans 'Name' %}</th>
+        <th>{% trans 'IBAN' %}</th>
         <th>{% trans 'Balance' %}</th>
         <th>{% trans 'Active' %}</th>
         <th></th>
@@ -28,6 +29,7 @@
       {% for account in accounts %}
       <tr{% if not account.active %} class="inactive-account"{% endif %}>
         <td><a href="{% url 'account_view' account.id %}">{{ account.name }}</a></td>
+        <td>{{ account.iban }}</td>
         <td>{{ account.balance|intcomma }}</td>
         <td>{% if account.active %}<i class="fa fa-check"></i>{% else %}<i class="fa fa-close"></i>{% endif %}</td>
         <td><a href="{% url 'account_update' account.id %}">{% trans 'Edit' %}</a></td>
