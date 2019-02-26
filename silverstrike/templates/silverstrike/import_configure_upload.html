@@ -25,7 +25,9 @@
                         <th>{% trans 'Transaction Date' %}</th>
                         <th>{% trans 'Book Date' %}</th>
                         <th>{% trans 'Account' %}</th>
-                        <th>{% trans 'Account' %}</th>
+                        <th>{% trans 'IBAN' %}</th>
+                        <th>{% trans 'Opposing Account' %}</th>
+                        <th>{% trans 'Opposing IBAN' %}</th>
                         <th>{% trans 'Title' %}</th>
                         <th>{% trans 'Notes' %}</th>
                         <th>{% trans 'Recurrence' %}</th>
@@ -35,9 +37,10 @@
                 <tr>
                     <td><input type="date" value="{{ datum.transaction_date|date:'Y-m-d' }}" name="date-{{forloop.counter0}}"></td>
                     <td>{{ datum.book_date|date:"SHORT_DATE_FORMAT" }}</td>
-                    <td><input class="account-input" type="text" name="account-{{forloop.counter0}}" autocomplete="off"></td>
                     <td>{{ datum.account }}</td>
-                    <td><input type="text" name="title-{{forloop.counter0}}"></td>
+                    <td>{{ datum.account_iban }}</td>
+                    <td>{{ datum.opposing_account }}</td>
+                    <td>{{ datum.opposing_account_iban }}</td>
                     <td>{{ datum.notes }}</td>
                     <td>
                         <select name="recurrence-{{forloop.counter0}}">
