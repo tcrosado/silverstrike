@@ -45,22 +45,39 @@ class ImportProcessView(LoginRequiredMixin, generic.TemplateView):
         importer = self.kwargs['importer']
         data = importers.IMPORTERS[importer].import_transactions(file.file.path)
         for i in range(len(data)):
-            title = request.POST.get('title-{}'.format(i), '')
-            account = request.POST.get('account-{}'.format(i), '')
-            recurrence = int(request.POST.get('recurrence-{}'.format(i), '-1'))
-            book_date = data[i].book_date
+            account = data[i].account
+            account_iban = data[i].account_iban
+            opposing_account = data[i].opposing_account
+            opposing_account_iban = data[i].opposing_account_iban
             date = data[i].transaction_date
-            if not (title or account):
-                continue
+            book_date = data[i].book_date
+            title = request.POST.get('title-{}'.format(i), '')
+            recurrence = int(request.POST.get('recurrence-{}'.format(i), '-1'))
+
+            if not title:
+                title = data[i].opposing_account
             amount = float(data[i].amount)
             if amount == 0:
                 continue
+
+            # Account setup
             account, _ = models.Account.objects.get_or_create(
-                name=account,
-                defaults={'account_type': models.Account.FOREIGN})
-            if not account.iban and hasattr(data[i], 'iban'):
+                iban=account_iban,
+                defaults={'account_type': models.Account.FOREIGN,
+                          'iban': account_iban})
+
+            if not account.last_modified and hasattr(data[i], 'iban'):
                 account.iban = data[i].iban
                 account.save()
+
+            # Opposing Account setup
+            opposing_account, _ = models.Account.objects.get_or_create(
+                name=opposing_account,
+                defaults={'account_type': models.Account.FOREIGN,
+                          'iban': opposing_account_iban}
+            )
+
+            # Set transaction type
             transaction_type = -1
             if account.account_type == models.Account.PERSONAL:
                 transaction_type = models.Transaction.TRANSFER
@@ -69,6 +86,7 @@ class ImportProcessView(LoginRequiredMixin, generic.TemplateView):
                     transaction_type = models.Transaction.WITHDRAW
                 else:
                     transaction_type = models.Transaction.DEPOSIT
+
             transaction = models.Transaction()
             transaction.title = title
             transaction.date = date
@@ -82,16 +100,16 @@ class ImportProcessView(LoginRequiredMixin, generic.TemplateView):
                 amount=amount,
                 date=book_date,
                 transaction=transaction,
-                account_id=self.kwargs['account'],
-                opposing_account=account
+                account=account,
+                opposing_account=opposing_account
                 )
             models.Split.objects.create(
                 title=title,
                 amount=-amount,
                 date=date,
                 transaction=transaction,
-                account=account,
-                opposing_account_id=self.kwargs['account']
+                account=opposing_account,
+                opposing_account=account
                 )
         return HttpResponseRedirect('/')
 

@@ -16,15 +16,16 @@ def import_transactions(csv_path):
             if i == 1:
                 continue
             try:
-                print(line)
-                lines.append(ImportStatement(
+                statement = ImportStatement(
                     book_date=datetime.datetime.strptime(line[1], '%Y-%m-%d').date(),
                     transaction_date=datetime.datetime.strptime(line[0], '%Y-%m-%d').date(),
-                    account=line[2],
-                    notes=line[3],# Payee
-                    iban=line[2],
+                    opposing_account=line[3],
+                    opposing_account_iban=line[4],
+                    account_iban=line[2],
                     amount=float(line[5].replace('.', '').replace(',', '.'))
-                ))
+                )
+
+                lines.append(statement)
             except ValueError:
                 print('Error')
                 # first line contains headers
