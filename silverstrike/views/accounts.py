@@ -24,7 +24,7 @@ class AccountCreate(LoginRequiredMixin, generic.edit.CreateView):
 
 class ForeignAccountCreate(LoginRequiredMixin, generic.edit.CreateView):
     model = Account
-    fields = ['name']
+    fields = ['name','iban']
 
     def form_valid(self, form):
         account = form.save(commit=False)
@@ -35,7 +35,7 @@ class ForeignAccountCreate(LoginRequiredMixin, generic.edit.CreateView):
 
 class AccountUpdate(LoginRequiredMixin, generic.edit.UpdateView):
     model = Account
-    fields = ['name', 'active', 'show_on_dashboard']
+    fields = ['name', 'iban', 'active', 'show_on_dashboard']
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -82,7 +82,8 @@ class AccountIndex(LoginRequiredMixin, generic.TemplateView):
         context['menu'] = 'accounts'
         balances = Split.objects.personal().past().order_by('account_id').values(
             'account_id').annotate(Sum('amount'))
-        accounts = list(Account.objects.personal().values('id', 'name', 'active'))
+        accounts = list(Account.objects.personal().values('id', 'name', 'iban', 'active'))
+
         for a in accounts:
             a['balance'] = 0
         for b in balances:

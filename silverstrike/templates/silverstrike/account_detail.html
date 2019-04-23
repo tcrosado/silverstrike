@@ -9,6 +9,7 @@
 
 {% block content_header %}
     <h1>{{ account.name }}
+        <small>{{ account.iban }}</small>
         <small>{{ month|date:'F Y' }}</small>
     </h1>
     <ol class="breadcrumb">
