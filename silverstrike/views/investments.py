@@ -13,6 +13,35 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu'] = 'investments'
+        context['menu'] = 'investment-overview'
         
+        return context
+
+
+class InvestmentOperationsView(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'silverstrike/investments.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = 'investment-operations'
+
+        return context
+
+
+class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'silverstrike/investments.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = 'investment-calculator'
+
+        return context
+
+class InvestmentConfigView(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'silverstrike/investments.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = 'investment-config'
+
         return context

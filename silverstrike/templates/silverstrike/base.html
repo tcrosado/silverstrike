@@ -133,11 +133,30 @@
                 <i class="fa fa-pie-chart" aria-hidden="true"></i>
                 <span>{% trans 'Charts' %}</span>
               </a>
-            <li{% if menu == "investments" %} class="active"{% endif %}>
-              <a href="{% url 'investments' %}">
-                <i class="fa fa-line-chart" arial-hidden="true"></i>
-                <span>{% trans 'Investments' %}</span>
-              </a>
+            </li>
+            <li class="treeview {% if "investment" in menu  %} active {% endif %}">
+                <a href="{% url 'investment-overview' %}">
+                  <i class="fa fa-line-chart" arial-hidden="true"></i>
+                  <span>{% trans 'Investments' %}</span>
+                  <span class="pull-right-container">
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+                </a>
+                <ul class="treeview-menu">
+                  <li {% if menu == "investment-overview" %} class="active"{% endif %}>
+                    <a href="{% url 'investment-overview' %}"><i class="fa fa-pie-chart fa-fw"></i>{% trans 'Overview' %}</a>
+                  </li>
+                  <li{% if menu == "investment-operations" %} class="active"{% endif %}>
+                    <a href="{% url 'investment-operations' %}"><i class="fa fa-list fa-fw"></i>{% trans 'Operations' %}</a>
+                  </li>
+                  <li {% if menu == "investment-calculator" %} class="active"{% endif %}>
+                    <a href="{% url 'investment-calculator' %}"><i class="fa fa-plus fa-fw"></i>{% trans 'Calculator' %}</a>
+                  </li>
+                  <li {% if menu == "investment-config" %} class="active"{% endif %}>
+                    <a href="{% url 'investment-config' %}"><i class="fa fa-cog fa-fw"></i>{% trans 'Configuration' %}</a>
+                  </li>
+                </ul>
+            </li>
             <li class="treeview{% if menu == "settings" %} active{% endif %}">
               <a href="#">
                 <i class="fa fa-file-o fa-fw"></i>
