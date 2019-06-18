@@ -1,11 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse, reverse_lazy
 from django.views import generic
 
 from silverstrike.forms import DepositForm, TransactionFormSet, TransferForm, WithdrawForm
-from silverstrike.models import Account, Split, Transaction
+from silverstrike.models import Account, Split, Transaction, Category
 
+import json
 
 class TransactionDetailView(LoginRequiredMixin, generic.DetailView):
     model = Transaction
@@ -52,7 +53,25 @@ class TransactionIndex(LoginRequiredMixin, generic.ListView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'transactions'
         context['submenu'] = 'all'
+        context['categories'] = Category.objects.all()
         return context
+
+    def post(self, request):
+        request_data = request.POST
+        try:
+            for txId in request_data.getlist('transactions[]'):
+
+                transaction = Split.objects.filter(transaction=txId).personal()
+                category = Category.objects.filter(pk=request_data.get('category_id'))[0]
+                transaction.update(category = category)
+
+            response = dict()
+            response['transactions'] =  request_data.getlist('transactions[]')
+            response['category_id'] =  request_data.get('category_id')
+            return HttpResponse(json.dumps(response),status=200)
+        except Exception as e:
+            print(e)
+
 
 
 class TransactionCreate(LoginRequiredMixin, generic.edit.CreateView):
