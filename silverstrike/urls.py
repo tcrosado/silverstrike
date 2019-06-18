@@ -69,8 +69,13 @@ urlpatterns = [
     path('accounts/', account_views.AccountIndex.as_view(), name='accounts'),
 
     path('investments/',
-          investment_views.InvestmentView.as_view(), name='investments'),
-
+          investment_views.InvestmentView.as_view(), name='investment-overview'),
+    path('investments/operations/',
+         investment_views.InvestmentOperationsView.as_view(), name='investment-operations'),
+    path('investments/calculator/',
+         investment_views.InvestmentCalculatorView.as_view(), name='investment-calculator'),
+    path('investments/config/',
+         investment_views.InvestmentConfigView.as_view(), name='investment-config'),
 
     path('recurrences/',
          recurrence_views.RecurringTransactionIndex.as_view(), name='recurrences'),
