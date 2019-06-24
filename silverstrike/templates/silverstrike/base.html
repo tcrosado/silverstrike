@@ -53,6 +53,9 @@
                 <li>
                   <a href="{% url 'split_create' %}">{% trans 'New Split Transaction' %}</a>
                 </li>
+                <li>
+                  <a href="{% url 'investment_operation_new' %}">{% trans  'New Investment Operation' %}</a>
+                </li>
               </ul>
               </li>
               <li class="dropdown user user-menu">
@@ -135,7 +138,7 @@
               </a>
             </li>
             <li class="treeview {% if "investment" in menu  %} active {% endif %}">
-                <a href="{% url 'investment-overview' %}">
+                <a href="{% url 'investment_overview' %}">
                   <i class="fa fa-line-chart" arial-hidden="true"></i>
                   <span>{% trans 'Investments' %}</span>
                   <span class="pull-right-container">
@@ -143,11 +146,11 @@
                 </span>
                 </a>
                 <ul class="treeview-menu">
-                  <li {% if menu == "investment-overview" %} class="active"{% endif %}>
-                    <a href="{% url 'investment-overview' %}"><i class="fa fa-pie-chart fa-fw"></i>{% trans 'Overview' %}</a>
+                  <li {% if menu == "investment_overview" %} class="active"{% endif %}>
+                    <a href="{% url 'investment_overview' %}"><i class="fa fa-pie-chart fa-fw"></i>{% trans 'Overview' %}</a>
                   </li>
-                  <li{% if menu == "investment-operations" %} class="active"{% endif %}>
-                    <a href="{% url 'investment-operations' %}"><i class="fa fa-list fa-fw"></i>{% trans 'Operations' %}</a>
+                  <li{% if menu == "investment_operations" %} class="active"{% endif %}>
+                    <a href="{% url 'investment_operations' %}"><i class="fa fa-list fa-fw"></i>{% trans 'Operations' %}</a>
                   </li>
                   <li {% if menu == "investment-calculator" %} class="active"{% endif %}>
                     <a href="{% url 'investment-calculator' %}"><i class="fa fa-plus fa-fw"></i>{% trans 'Calculator' %}</a>

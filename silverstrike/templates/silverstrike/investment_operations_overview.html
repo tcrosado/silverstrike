@@ -1,0 +1,184 @@
+{% extends 'silverstrike/base.html' %}
+{% load i18n %}
+{% load static %}
+{% load tags %}
+{% load humanize %}
+
+{% block content_header %}
+<h1>{% trans 'Investments' %}</h1>
+<ol class="breadcrumb">
+  <li><a href="/">{% trans 'Home' %}</a></li>
+  <li class="active">{% trans 'Transactions' %}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+
+{% csrf_token %}
+
+<div class="box">
+<div class="box-header with-border">
+  <h3 class="box-title">{% trans 'Operations list' %}</h3>
+  <div style="float:right; display:none;" class="editCategories" >
+    <select class="form-control" id="categories">
+      {% for category in categories %}
+          <option value ="{{ category.id }}">{{ category.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-success" id="btn-apply">Apply</button>
+    <button type="button" class="btn btn-danger" id="btn-cancel">Cancel</button>
+  </div>
+</div>
+<div class="box-body">
+
+<table class="table table-striped">
+  <tr>
+    <th>{% trans 'Date' %}</th>
+    <th>{% trans 'Type' %}</th>
+    <th>{% trans 'Category' %}</th>
+    <th>{% trans 'Name' %}</th>
+    <th class="hidden-xs">{% trans 'ISIN' %}</th>
+    <th>{% trans 'Amount' %}</th>
+    <th class="hidden-xs">{% trans 'Price' %}</th>
+    <th class="hidden-xs">{% trans 'Total' %}</th>
+  </tr>
+{% for transaction in transactions %}
+<tr>
+
+  <td class="editCategories" id="{{ transaction.transaction.id }}" style="display:none;">
+    <input id="categorySelector" type="checkbox">
+  </td>
+  <td><a href="{{ transaction.get_absolute_url }}">{{ transaction.transaction.title }}</a></td>
+  <td class="hidden-xs">{{ transaction.transaction.get_transaction_type_str }}</td>
+  <td>{{ transaction.transaction.date }}</td>
+  <td class="hidden-xs">{{ transaction.date }}</td>
+  <td class="text-{% if transaction.is_deposit %}green{% elif transaction.is_withdraw %}red{% endif %}">
+    {% if transaction.is_transfer %}{{ transaction.amount|negate|intcomma }}{% else %}{{ transaction.amount|intcomma }}{% endif %}
+  </td>
+  <td class="hidden-xs"><a href="{{ transaction.account.get_absolute_url }}">{{ transaction.account }}</a></td>
+  <td class="hidden-xs">{% if not transaction.is_system %}<a href="{{ transaction.opposing_account.get_absolute_url }}">{{ transaction.opposing_account }}</a>{% endif %}</td>
+  <td class="hidden-xs">
+    {% if transaction.category %}
+    <a href="{{ transaction.category.get_absolute_url }}">{{ transaction.category }}</a></td>
+    {% endif %}
+  </tr>
+{% endfor %}
+</table>
+</div>
+<div class="box-footer text-center">
+{% if is_paginated %}
+<ul class="pagination">
+{% if page_obj.has_previous %}
+<li><a href="{{ request.path }}?page={{ page_obj.previous_page_number}}"><i class="force-parent-lh fa fa-chevron-left" aria-hidden="true"></i>
+</a>
+{% endif %}
+</li>
+<li>
+  <select class="form-control" id="pageList" >
+    {% for _ in ''|center:page_obj.paginator.num_pages %}
+    {% if forloop.counter == page_obj.number %}
+    <option selected="">
+      {{ page_obj.number }}
+    </option>
+    {% else %}
+    <option>
+      {{ forloop.counter }}
+    </option>
+    {% endif %}
+    {% endfor %}
+  </select>
+</li>
+{% if page_obj.has_next %}
+<li><a href="{{ request.path }}?page={{ page_obj.next_page_number }}"><i class="force-parent-lh fa fa-chevron-right" aria-hidden="true"></i>
+</a></li>
+{% endif %}
+</ul>
+
+{% endif %}
+</div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+
+  $('select#pageList').change(function() {
+    $( "select option:selected" ).each(function() {
+      window.location.href = "{{ request.path }}?page=" + $(this).val();
+    });
+  })
+
+  $("#btn-cancel").click( function() {
+     $(".editCategories").hide();
+     $("#editButton").show();
+  });
+
+  $("#btn-edit").click(function() {
+     $(".editCategories").show();
+     $("#editButton").hide();
+  });
+
+$(document).ready(function() {
+    $("#btn-apply").click(function(e) {
+        e.preventDefault();
+        var data = {
+            'category_id': getSelectedCategory(),
+            'transactions' : getSelectedTransactions()
+        }
+
+        $.ajax({
+            "type": "POST",
+            "dataType": "json",
+            "url": "/transactions/",
+            "data": data,
+            "success": function( data, textStatus, request ) {
+              location.reload();
+            },
+            "error": function(jqXhr, textStatus, errorThrown) {
+              console.error(errorThrown);
+            }
+        });
+    });
+});
+
+function getSelectedCategory() {
+  return $("select#categories").val()
+}
+
+function getSelectedTransactions() {
+  var txIds = []
+  $("td.editCategories").each( function(id,element) {
+    var id = element.id
+    if($(element).children()[0].checked){
+      txIds.push(id)
+    }
+  });
+
+  return txIds
+}
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+            // Only send the token to relative URLs i.e. locally.
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    }
+});
+</script>
+{% endblock %}
