@@ -239,4 +239,45 @@ class ExportForm(forms.Form):
         queryset=models.Account.objects.personal())
 
 
+class InvestmentOperationForm(forms.ModelForm): #FIXME
+    class Meta:
+        model = models.InvestmentOperation
+        fields = ['name', 'account', 'isin',
+                  'amount', 'date', 'price', 'category', 'type']
+
+    name = forms.CharField()
+    account = forms.ModelChoiceField(queryset=models.Account.objects.filter(
+        account_type=models.Account.PERSONAL, active=True))
+    isin = forms.CharField()
+    amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    category = forms.ModelChoiceField(
+        queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
+    type = forms.ModelChoiceField(
+        queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
+    date = forms.DateField(required=False)
+
+
+
+    def save(self, commit=True):
+        transaction = super().save(commit)
+        src = self.cleaned_data['source_account']
+        dst = self.cleaned_data['destination_account']
+        amount = self.cleaned_data['amount']
+        value_date = self.cleaned_data.get('value_date') or transaction.date
+        models.Split.objects.update_or_create(
+            transaction=transaction, amount__lt=0,
+            defaults={'amount': -amount, 'account': src,
+                      'opposing_account': dst, 'date': value_date,
+                      'title': transaction.title,
+                      'category': self.cleaned_data['category']})
+        models.Split.objects.update_or_create(
+            transaction=transaction, amount__gt=0,
+            defaults={'amount': amount, 'account': dst,
+                      'opposing_account': src, 'date': value_date,
+                      'title': transaction.title,
+                      'category': self.cleaned_data['category']})
+        return transaction
+
+
 CategoryAssignFormset = forms.modelformset_factory(models.Split, fields=('category',), extra=0)
