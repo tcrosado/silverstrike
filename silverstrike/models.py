@@ -459,3 +459,56 @@ class RecurringTransaction(models.Model):
                     outstanding += t.amount
                 t.update_date()
         return outstanding
+
+class InvestmentOperation(models.Model): 
+    BUY = 1
+    SELL = 2
+    DIV = 3
+    TRANSACTION_TYPES = (
+        (BUY, 'Buy'),
+        (SELL, 'Sell'),
+        (DIV, 'Dividend')
+    )
+
+    class Meta:
+        ordering = ['-date', 'name']
+
+    account = models.ForeignKey(Account, models.CASCADE, related_name='investment_transactions')
+    date = models.DateField(default=date.today)
+    type = models.IntegerField(choices=TRANSACTION_TYPES)
+    name = models.CharField(max_length=64)
+    isin = models.CharField(max_length=64) #FIXME
+    category = models.CharField(max_length=64) #FIXME
+    amount = models.IntegerField()
+    price = models.FloatField()
+    last_modified = models.DateTimeField(auto_now=True)
+
+    objects = TransactionQuerySet.as_manager()
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('transaction_detail', args=[self.pk])
+
+    def get_transaction_type_str(self):
+        for i, name in self.TRANSACTION_TYPES:
+            if i == self.transaction_type:
+                return name
+
+    @property
+    def amount(self):
+        return self.amount
+
+    @property
+    def is_buy(self):
+        return self.transaction_type == self.BUY
+
+    @property
+    def is_sell(self):
+        return self.transaction_type == self.SELL
+
+    @property
+    def is_dividend(self):
+        return self.transaction_type == self.DIV
+
