@@ -460,7 +460,7 @@ class RecurringTransaction(models.Model):
                 t.update_date()
         return outstanding
 
-class InvestmentOperation(models.Model): 
+class InvestmentOperation(models.Model):
     BUY = 1
     SELL = 2
     DIV = 3
@@ -478,7 +478,7 @@ class InvestmentOperation(models.Model):
     type = models.IntegerField(choices=TRANSACTION_TYPES)
     name = models.CharField(max_length=64)
     isin = models.CharField(max_length=64) #FIXME
-    category = models.CharField(max_length=64) #FIXME
+    category = models.CharField(max_length=64, null=True) #FIXME
     amount = models.IntegerField()
     price = models.FloatField()
     last_modified = models.DateTimeField(auto_now=True)

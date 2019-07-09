@@ -92,7 +92,7 @@
           {% endfor %}
         </div>
       </div>
-      <!-- <div class="form-group{% if form.type.errors %} has-error{% endif %}">
+       <div class="form-group{% if form.type.errors %} has-error{% endif %}">
         <label class="col-sm-2 control-label" for="{{ form.type.id_for_label }}">{{ form.type.label }}</label>
         <div class="col-sm-8">
           {{ form.type|add_class:"form-control" }}
@@ -100,7 +100,7 @@
           <span class="help-block">{{ error }}</span>
           {% endfor %}
         </div>
-      </div> -->
+      </div>
       <button type="submit" class="btn btn-primary col-md-offset-2">{% if object %}{% trans 'Update' %}{% else %}{% trans 'Create' %}{% endif %}</button>
     </form>
 </div>

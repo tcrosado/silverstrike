@@ -8,6 +8,7 @@ class ImportUploadForm(forms.ModelForm):
     class Meta:
         model = models.ImportFile
         fields = ['file']
+
     account = forms.ModelChoiceField(queryset=models.Account.objects.personal())
     importer = forms.ChoiceField(choices=enumerate(importers.IMPORTER_NAMES))
 
@@ -221,6 +222,7 @@ class SplitForm(forms.ModelForm):
     class Meta:
         model = models.Split
         fields = ['title', 'account', 'opposing_account', 'date', 'amount', 'category']
+
     account = forms.ModelChoiceField(queryset=models.Account.objects.exclude(
         account_type=models.Account.SYSTEM))
     opposing_account = forms.ModelChoiceField(queryset=models.Account.objects.exclude(
@@ -229,7 +231,7 @@ class SplitForm(forms.ModelForm):
 
 TransactionFormSet = forms.models.inlineformset_factory(
     models.Transaction, models.Split, form=SplitForm, extra=1
-    )
+)
 
 
 class ExportForm(forms.Form):
@@ -239,7 +241,7 @@ class ExportForm(forms.Form):
         queryset=models.Account.objects.personal())
 
 
-class InvestmentOperationForm(forms.ModelForm): #FIXME
+class InvestmentOperationForm(forms.ModelForm):  # FIXME
     class Meta:
         model = models.InvestmentOperation
         fields = ['name', 'account', 'isin',
@@ -253,31 +255,9 @@ class InvestmentOperationForm(forms.ModelForm): #FIXME
     price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     category = forms.ModelChoiceField(
         queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
-    type = forms.ModelChoiceField(
-        queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
+    type = forms.ChoiceField(choices=models.InvestmentOperation.TRANSACTION_TYPES, required=True)
+
     date = forms.DateField(required=False)
-
-
-
-    def save(self, commit=True):
-        transaction = super().save(commit)
-        src = self.cleaned_data['source_account']
-        dst = self.cleaned_data['destination_account']
-        amount = self.cleaned_data['amount']
-        value_date = self.cleaned_data.get('value_date') or transaction.date
-        models.Split.objects.update_or_create(
-            transaction=transaction, amount__lt=0,
-            defaults={'amount': -amount, 'account': src,
-                      'opposing_account': dst, 'date': value_date,
-                      'title': transaction.title,
-                      'category': self.cleaned_data['category']})
-        models.Split.objects.update_or_create(
-            transaction=transaction, amount__gt=0,
-            defaults={'amount': amount, 'account': dst,
-                      'opposing_account': src, 'date': value_date,
-                      'title': transaction.title,
-                      'category': self.cleaned_data['category']})
-        return transaction
 
 
 CategoryAssignFormset = forms.modelformset_factory(models.Split, fields=('category',), extra=0)
