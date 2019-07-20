@@ -21,10 +21,13 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
 class InvestmentOperationsView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_operations_overview.html'
+    model = InvestmentOperation
+    context_object_name = 'transactions'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_operations'
+        context['transactions'] = InvestmentOperation.objects.all()
 
         return context
 
