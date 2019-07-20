@@ -4,6 +4,7 @@
 {% load tags %}
 {% load humanize %}
 
+
 {% block content_header %}
 <h1>{% trans 'Investments' %}</h1>
 <ol class="breadcrumb">
@@ -40,27 +41,29 @@
     <th class="hidden-xs">{% trans 'ISIN' %}</th>
     <th>{% trans 'Amount' %}</th>
     <th class="hidden-xs">{% trans 'Price' %}</th>
-    <th class="hidden-xs">{% trans 'Total' %}</th>
   </tr>
 {% for transaction in transactions %}
 <tr>
+  <td>{{ transaction.date }}</td>
+  <td>{{ transaction.type }}</td>
+  <td>{{ transaction.category }}</td>
+  <td>{{ transaction.name }}</td>
+  <td>{{ transaction.isin }}</td>
+  <td>{{ transaction.amount }}</td>
+  <td>{{ transaction.price }}</td>
 
-  <td class="editCategories" id="{{ transaction.transaction.id }}" style="display:none;">
-    <input id="categorySelector" type="checkbox">
-  </td>
-  <td><a href="{{ transaction.get_absolute_url }}">{{ transaction.transaction.title }}</a></td>
+  <!--<td>{{ transaction.name }}</td>
   <td class="hidden-xs">{{ transaction.transaction.get_transaction_type_str }}</td>
-  <td>{{ transaction.transaction.date }}</td>
-  <td class="hidden-xs">{{ transaction.date }}</td>
+  <td class="hidden-xs">{{ transaction.transaction.date }}</td>
   <td class="text-{% if transaction.is_deposit %}green{% elif transaction.is_withdraw %}red{% endif %}">
-    {% if transaction.is_transfer %}{{ transaction.amount|negate|intcomma }}{% else %}{{ transaction.amount|intcomma }}{% endif %}
+    {% if transaction.transaction.is_transfer %}{{ transaction.transaction.amount|negate|intcomma }}{% else %}{{ transaction.transaction.amount|intcomma }}{% endif %}
   </td>
-  <td class="hidden-xs"><a href="{{ transaction.account.get_absolute_url }}">{{ transaction.account }}</a></td>
-  <td class="hidden-xs">{% if not transaction.is_system %}<a href="{{ transaction.opposing_account.get_absolute_url }}">{{ transaction.opposing_account }}</a>{% endif %}</td>
+  <td class="hidden-xs"><a href="{{ transaction.account.get_absolute_url }}">{{ transaction.transaction.account }}</a></td>
+  <td class="hidden-xs">{% if not transaction.transaction.is_system %}<a href="{{ transaction.opposing_account.get_absolute_url }}">{{ transaction.opposing_account }}</a>{% endif %}</td>
   <td class="hidden-xs">
     {% if transaction.category %}
     <a href="{{ transaction.category.get_absolute_url }}">{{ transaction.category }}</a></td>
-    {% endif %}
+    {% endif %} -->
   </tr>
 {% endfor %}
 </table>

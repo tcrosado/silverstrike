@@ -241,23 +241,41 @@ class ExportForm(forms.Form):
         queryset=models.Account.objects.personal())
 
 
-class InvestmentOperationForm(forms.ModelForm):  # FIXME
+class InvestmentOperationForm(forms.ModelForm):
     class Meta:
         model = models.InvestmentOperation
         fields = ['name', 'account', 'isin',
-                  'amount', 'date', 'price', 'category', 'type']
+                  'quantity', 'date', 'price', 'category', 'type']
 
     name = forms.CharField()
     account = forms.ModelChoiceField(queryset=models.Account.objects.filter(
         account_type=models.Account.PERSONAL, active=True))
     isin = forms.CharField()
-    amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    quantity = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    # price or amount
     price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     category = forms.ModelChoiceField(
         queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
-    type = forms.ChoiceField(choices=models.InvestmentOperation.TRANSACTION_TYPES, required=True)
+    type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
 
     date = forms.DateField(required=False)
+
+    def save(self, commit=True):
+        transaction = super().save(False)
+        transaction.transaction_type = models.Transaction.SYSTEM
+        transaction.save()
+
+        dst = models.Account.objects.get(account_type=models.Account.SYSTEM)
+        src = self.cleaned_data['account']
+        total_price = self.cleaned_data['quantity'] * self.cleaned_data['price']
+        title = self.cleaned_data['name']
+        ## TODO
+        # - Distinguish between buy, sell and dividend order on Splits
+        models.Split.objects.create(transaction=transaction, amount=-total_price,
+                                    account_id=src.pk, opposing_account=dst, title=title)
+        models.Split.objects.create(transaction=transaction, amount=total_price,
+                                    account=dst, opposing_account_id=src, title=title)
+        return transaction
 
 
 CategoryAssignFormset = forms.modelformset_factory(models.Split, fields=('category',), extra=0)

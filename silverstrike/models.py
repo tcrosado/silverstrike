@@ -7,8 +7,6 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 
-   
-
 
 class AccountQuerySet(models.QuerySet):
     def personal(self):
@@ -25,6 +23,7 @@ class AccountQuerySet(models.QuerySet):
 
     def shown_on_dashboard(self):
         return self.filter(show_on_dashboard=True)
+
 
 class Account(models.Model):
     PERSONAL = 1
@@ -270,8 +269,8 @@ class Category(models.Model):
     @property
     def money_spent(self):
         return abs(Split.objects.filter(
-                category=self, account__account_type=Account.PERSONAL,
-                transaction__transaction_type=Transaction.WITHDRAW).aggregate(
+            category=self, account__account_type=Account.PERSONAL,
+            transaction__transaction_type=Transaction.WITHDRAW).aggregate(
             models.Sum('amount'))['amount__sum'] or 0)
 
     def get_absolute_url(self):
@@ -324,7 +323,7 @@ class RecurringTransaction(models.Model):
         (QUARTERLY, _('Quarterly')),
         (BIANNUALLY, _('Biannually')),
         (ANNUALLY, _('Annually'))
-        )
+    )
 
     SAME_DAY = 0
     PREVIOUS_WEEKDAY = 1
@@ -460,30 +459,27 @@ class RecurringTransaction(models.Model):
                 t.update_date()
         return outstanding
 
-class InvestmentOperation(models.Model):
-    BUY = 1
-    SELL = 2
-    DIV = 3
-    TRANSACTION_TYPES = (
+
+class InvestmentOperation(Transaction):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super.transaction_type = self.TRANSFER
+
+    BUY = 0
+    SELL = 1
+    DIV = 2
+    OPERATION_TYPES = (
         (BUY, 'Buy'),
         (SELL, 'Sell'),
         (DIV, 'Dividend')
     )
 
-    class Meta:
-        ordering = ['-date', 'name']
-
     account = models.ForeignKey(Account, models.CASCADE, related_name='investment_transactions')
-    date = models.DateField(default=date.today)
-    type = models.IntegerField(choices=TRANSACTION_TYPES)
-    name = models.CharField(max_length=64)
-    isin = models.CharField(max_length=64) #FIXME
-    category = models.CharField(max_length=64, null=True) #FIXME
-    amount = models.IntegerField()
-    price = models.FloatField()
-    last_modified = models.DateTimeField(auto_now=True)
-
-    objects = TransactionQuerySet.as_manager()
+    operation_type = models.IntegerField(choices=OPERATION_TYPES, default=BUY)
+    isin = models.CharField(max_length=64)  # FIXME
+    category = models.CharField(max_length=64, null=True)  # FIXME
+    quantity = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
@@ -492,23 +488,18 @@ class InvestmentOperation(models.Model):
         return reverse('transaction_detail', args=[self.pk])
 
     def get_transaction_type_str(self):
-        for i, name in self.TRANSACTION_TYPES:
+        for i, super.title in self.TRANSACTION_TYPES:
             if i == self.transaction_type:
-                return name
-
-    @property
-    def amount(self):
-        return self.amount
+                return super.title
 
     @property
     def is_buy(self):
-        return self.transaction_type == self.BUY
+        return self.operation_type == self.BUY
 
     @property
     def is_sell(self):
-        return self.transaction_type == self.SELL
+        return self.operation_type == self.SELL
 
     @property
     def is_dividend(self):
-        return self.transaction_type == self.DIV
-
+        return self.operation_type == self.DIV
