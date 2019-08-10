@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import ugettext as _
 
 from silverstrike import importers, models
+from silverstrike.models import Transaction, InvestmentOperation, Split
 
 
 class ImportUploadForm(forms.ModelForm):
@@ -244,38 +245,54 @@ class ExportForm(forms.Form):
 class InvestmentOperationForm(forms.ModelForm):
     class Meta:
         model = models.InvestmentOperation
-        fields = ['name', 'account', 'isin',
-                  'quantity', 'date', 'price', 'category', 'type']
+        fields = ['title', 'account', 'isin', 'quantity', 'date', 'amount', 'category',
+                  'operation_type', 'notes', 'transaction_type']
 
-    name = forms.CharField()
+    title = forms.CharField()
     account = forms.ModelChoiceField(queryset=models.Account.objects.filter(
         account_type=models.Account.PERSONAL, active=True))
     isin = forms.CharField()
     quantity = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     # price or amount
-    price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     category = forms.ModelChoiceField(
         queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
-    type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
-
+    operation_type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
+    transaction_type = forms.ChoiceField(choices=models.Transaction.TRANSACTION_TYPES, required=True)
     date = forms.DateField(required=False)
 
-    def save(self, commit=True):
-        transaction = super().save(False)
-        transaction.transaction_type = models.Transaction.SYSTEM
-        transaction.save()
+    def __init__(self, *args, **kwargs):
+        print('Its me')
+        super(InvestmentOperationForm, self).__init__(*args, **kwargs)
 
+    def save(self, commit=True):
         dst = models.Account.objects.get(account_type=models.Account.SYSTEM)
         src = self.cleaned_data['account']
-        total_price = self.cleaned_data['quantity'] * self.cleaned_data['price']
-        title = self.cleaned_data['name']
-        ## TODO
-        # - Distinguish between buy, sell and dividend order on Splits
-        models.Split.objects.create(transaction=transaction, amount=-total_price,
-                                    account_id=src.pk, opposing_account=dst, title=title)
-        models.Split.objects.create(transaction=transaction, amount=total_price,
-                                    account=dst, opposing_account_id=src, title=title)
-        return transaction
+        total_price = self.cleaned_data['quantity'] * self.cleaned_data['amount']
+        date = self.cleaned_data['date']
+        print('Got it all')
 
+        transaction = super().save(commit)
+        print('Saved Tx')
+        # TODO
+        # - Distinguish between buy, sell and dividend order on Splits
+
+        models.Split.objects.update_or_create(
+            transaction=transaction, amount__lt=0,
+            defaults={'amount': -total_price, 'account': src,
+                      'opposing_account': dst, 'date': date,
+                      'title': transaction.title,
+                      'category': self.cleaned_data['category']})
+        print('Saved Split 1')
+
+        models.Split.objects.update_or_create(
+            transaction=transaction, amount__gt=0,
+            defaults={'amount': total_price, 'account': dst,
+                      'opposing_account': src, 'date': date,
+                      'title': transaction.title,
+                      'category': self.cleaned_data['category']})
+        print('Saved Split 2')
+
+        return transaction
 
 CategoryAssignFormset = forms.modelformset_factory(models.Split, fields=('category',), extra=0)

@@ -138,6 +138,7 @@ class Transaction(models.Model):
                                    related_name='recurrences', blank=True, null=True)
 
     objects = TransactionQuerySet.as_manager()
+    transaction_ptr = models.IntegerField(null=True)
 
     def __str__(self):
         return self.title
@@ -464,7 +465,7 @@ class InvestmentOperation(Transaction):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        super.transaction_type = self.TRANSFER
+        self.transaction_type = self.TRANSFER
 
     BUY = 0
     SELL = 1
