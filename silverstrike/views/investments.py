@@ -3,9 +3,9 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect
 from django.views import generic
 
-from silverstrike.lib import last_day_of_month
 from silverstrike.models import InvestmentOperation
 from silverstrike.forms import InvestmentOperationForm
 
@@ -43,17 +43,24 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
 class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):#FIXME
     model = InvestmentOperation
     template_name = 'silverstrike/investment_operation_edit.html'
+    form_class = InvestmentOperationForm
 
-    def dispatch(self, request, *args, **kwargs):
-        return super(InvestmentOperationCreate, self).dispatch(request, *args, **kwargs)
-
-    def get_form_class(self):
-        return InvestmentOperationForm
 
     def get_context_data(self, **kwargs):
         context = super(InvestmentOperationCreate, self).get_context_data(**kwargs)
         context['menu'] = 'transactions'
         return context
+
+    def post(self, request, *args, **kwargs):
+        form = InvestmentOperationForm(request.POST)
+        value = form.is_valid()
+        print(value)
+        if value:
+            form.save()
+        else:
+            print(form.errors)
+        return super().post(request)
+
 
 class InvestmentConfigView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investments.html'
