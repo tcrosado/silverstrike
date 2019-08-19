@@ -493,3 +493,6 @@ class InvestmentOperation(models.Model):
     @property
     def is_dividend(self):
         return self.operation_type == self.DIV
+
+    def operation_name(self):
+        return self.OPERATION_TYPES[self.operation_type][1]

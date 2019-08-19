@@ -269,7 +269,7 @@ class InvestmentOperationForm(forms.ModelForm):
         isin = self.cleaned_data['isin']
         total_price = quantity * unit_price
         date = self.cleaned_data['date']
-        title = str(self.cleaned_data['operation_type'])+" "+str(self.cleaned_data['isin'])+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
+        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['isin'])+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
 
         transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
         investmentOperation = models.InvestmentOperation.objects.create(date=date,
