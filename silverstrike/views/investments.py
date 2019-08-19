@@ -51,16 +51,6 @@ class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):#FI
         context['menu'] = 'transactions'
         return context
 
-    def post(self, request, *args, **kwargs):
-        form = InvestmentOperationForm(request.POST)
-        value = form.is_valid()
-        print(value)
-        if value:
-            form.save()
-        else:
-            print(form.errors)
-        return super().post(request)
-
 
 class InvestmentConfigView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investments.html'
