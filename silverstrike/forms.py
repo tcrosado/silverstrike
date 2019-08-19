@@ -245,20 +245,18 @@ class ExportForm(forms.Form):
 class InvestmentOperationForm(forms.ModelForm):
     class Meta:
         model = models.InvestmentOperation
-        fields = ['title', 'account', 'isin', 'quantity', 'date', 'amount', 'category',
-                  'operation_type', 'notes', 'transaction_type']
+        fields = [ 'account', 'isin', 'quantity', 'date', 'price', 'category',
+                  'operation_type']
 
-    title = forms.CharField()
     account = forms.ModelChoiceField(queryset=models.Account.objects.filter(
         account_type=models.Account.PERSONAL, active=True))
     isin = forms.CharField()
     quantity = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     # price or amount
-    amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     category = forms.ModelChoiceField(
         queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
     operation_type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
-    transaction_type = forms.ChoiceField(choices=models.Transaction.TRANSACTION_TYPES, required=True)
     date = forms.DateField(required=False)
 
     def __init__(self, *args, **kwargs):
@@ -267,12 +265,20 @@ class InvestmentOperationForm(forms.ModelForm):
 
     def save(self, commit=True):
         dst = models.Account.objects.get(account_type=models.Account.SYSTEM)
-        src = self.cleaned_data['account']
-        total_price = self.cleaned_data['quantity'] * self.cleaned_data['amount']
+        src = self.cleaned_data['account'] 
+        category = self.cleaned_data['category']
+        operation_type = self.cleaned_data['operation_type']
+        unit_price = self.cleaned_data['price']
+        quantity = self.cleaned_data['quantity']
+        isin = self.cleaned_data['isin']
+        total_price = quantity * unit_price
         date = self.cleaned_data['date']
+        title = str(self.cleaned_data['operation_type'])+" "+str(self.cleaned_data['isin'])+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
         print('Got it all')
-
-        transaction = super().save(commit)
+        transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
+        investmentOperation = models.InvestmentOperation.objects.create(date=date,
+                                                        price=unit_price,account=src,operation_type=operation_type,
+                                                        isin=isin,category=category,quantity=quantity,transaction_id=transaction)
         print('Saved Tx')
         # TODO
         # - Distinguish between buy, sell and dividend order on Splits
@@ -282,7 +288,7 @@ class InvestmentOperationForm(forms.ModelForm):
             defaults={'amount': -total_price, 'account': src,
                       'opposing_account': dst, 'date': date,
                       'title': transaction.title,
-                      'category': self.cleaned_data['category']})
+                      'category': category})
         print('Saved Split 1')
 
         models.Split.objects.update_or_create(
@@ -290,7 +296,7 @@ class InvestmentOperationForm(forms.ModelForm):
             defaults={'amount': total_price, 'account': dst,
                       'opposing_account': src, 'date': date,
                       'title': transaction.title,
-                      'category': self.cleaned_data['category']})
+                      'category': category})
         print('Saved Split 2')
 
         return transaction
