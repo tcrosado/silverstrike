@@ -259,10 +259,6 @@ class InvestmentOperationForm(forms.ModelForm):
     operation_type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
     date = forms.DateField(required=False)
 
-    def __init__(self, *args, **kwargs):
-        print('Its me')
-        super(InvestmentOperationForm, self).__init__(*args, **kwargs)
-
     def save(self, commit=True):
         dst = models.Account.objects.get(account_type=models.Account.SYSTEM)
         src = self.cleaned_data['account'] 
@@ -274,12 +270,11 @@ class InvestmentOperationForm(forms.ModelForm):
         total_price = quantity * unit_price
         date = self.cleaned_data['date']
         title = str(self.cleaned_data['operation_type'])+" "+str(self.cleaned_data['isin'])+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
-        print('Got it all')
+
         transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
         investmentOperation = models.InvestmentOperation.objects.create(date=date,
                                                         price=unit_price,account=src,operation_type=operation_type,
                                                         isin=isin,category=category,quantity=quantity,transaction_id=transaction)
-        print('Saved Tx')
         # TODO
         # - Distinguish between buy, sell and dividend order on Splits
 
@@ -289,7 +284,6 @@ class InvestmentOperationForm(forms.ModelForm):
                       'opposing_account': dst, 'date': date,
                       'title': transaction.title,
                       'category': category})
-        print('Saved Split 1')
 
         models.Split.objects.update_or_create(
             transaction=transaction, amount__gt=0,
@@ -297,7 +291,6 @@ class InvestmentOperationForm(forms.ModelForm):
                       'opposing_account': src, 'date': date,
                       'title': transaction.title,
                       'category': category})
-        print('Saved Split 2')
 
         return transaction
 
