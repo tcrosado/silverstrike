@@ -496,3 +496,9 @@ class InvestmentOperation(models.Model):
 
     def operation_name(self):
         return self.OPERATION_TYPES[self.operation_type][1]
+
+class SecurityQuantity(models.Model):
+    account = models.ForeignKey(Account, models.CASCADE)
+    isin = models.CharField(max_length=64)
+    quantity = models.IntegerField(default=0)
+

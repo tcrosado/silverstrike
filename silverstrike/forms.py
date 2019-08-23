@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 
 from silverstrike import importers, models
@@ -273,9 +274,6 @@ class InvestmentOperationForm(forms.ModelForm):
 
         transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
         
-        investmentOperation = models.InvestmentOperation.objects.create(date=date,
-                                                        price=unit_price,account=src,operation_type=operation_type,
-                                                        isin=isin,category=category,quantity=quantity,transaction_id=transaction)
 
         if operation_type == str(models.InvestmentOperation.BUY):
             origin_acount = src
@@ -283,17 +281,46 @@ class InvestmentOperationForm(forms.ModelForm):
 
             if src.balance < total_price:
                 raise forms.ValidationError("Not enough Funds")
-            #FIXME Check Avaliable Money
+
+            try:
+                securityQuantity = models.SecurityQuantity.objects.get(account=src, isin=isin)
+                securityQuantity.quantity = securityQuantity.quantity + quantity
+                securityQuantity.save()
+            except ObjectDoesNotExist:
+                models.SecurityQuantity.objects.create(account = src, isin= isin, quantity = quantity)
+
         elif operation_type == str(models.InvestmentOperation.SELL):
             origin_acount = dst
             destination_account = src
-            #FIXME Check Avaliable Assets
+
+            try:
+                securityQuantity = models.SecurityQuantity.objects.get(account=src,isin=isin)
+
+                if securityQuantity.quantity < quantity:
+                    raise forms.ValidationError("The account does not own that many securities")
+
+                securityQuantity.quantity = securityQuantity.quantity - quantity
+                securityQuantity.save()
+            except ObjectDoesNotExist:
+                raise forms.ValidationError("The account does not own that many securities")
+
         elif operation_type == str(models.InvestmentOperation.DIV):
             origin_acount = dst
             destination_account = src
-            #FIXME Check Avaliable Assets
+            try:
+                securityQuantity = models.SecurityQuantity.objects.get(account=src, isin=isin)
+                if securityQuantity.quantity < quantity:
+                    raise forms.ValidationError("The account does not own that many securities")
+            except ObjectDoesNotExist:
+                raise forms.ValidationError("The account does not own that many securities")
         else:
-            raise ValueError('Invalid operation type selected') 
+            raise ValueError('Invalid operation type selected')
+
+        investmentOperation = models.InvestmentOperation.objects.create(date=date,
+                                                                        price=unit_price, account=src,
+                                                                        operation_type=operation_type,
+                                                                        isin=isin, category=category, quantity=quantity,
+                                                                        transaction_id=transaction)
 
         models.Split.objects.update_or_create(
             transaction=transaction, amount__lt=0,
