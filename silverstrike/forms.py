@@ -245,53 +245,69 @@ class ExportForm(forms.Form):
 class InvestmentOperationForm(forms.ModelForm):
     class Meta:
         model = models.InvestmentOperation
-        fields = ['title', 'account', 'isin', 'quantity', 'date', 'amount', 'category',
-                  'operation_type', 'notes', 'transaction_type']
+        fields = [ 'account', 'isin', 'quantity', 'date', 'price', 'category',
+                  'operation_type']
 
-    title = forms.CharField()
     account = forms.ModelChoiceField(queryset=models.Account.objects.filter(
         account_type=models.Account.PERSONAL, active=True))
     isin = forms.CharField()
     quantity = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     # price or amount
-    amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     category = forms.ModelChoiceField(
         queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
     operation_type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
-    transaction_type = forms.ChoiceField(choices=models.Transaction.TRANSACTION_TYPES, required=True)
     date = forms.DateField(required=False)
-
-    def __init__(self, *args, **kwargs):
-        print('Its me')
-        super(InvestmentOperationForm, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
         dst = models.Account.objects.get(account_type=models.Account.SYSTEM)
-        src = self.cleaned_data['account']
-        total_price = self.cleaned_data['quantity'] * self.cleaned_data['amount']
+        src = self.cleaned_data['account'] 
+        category = self.cleaned_data['category']
+        operation_type = self.cleaned_data['operation_type']
+        unit_price = self.cleaned_data['price']
+        quantity = self.cleaned_data['quantity']
+        isin = self.cleaned_data['isin']
+        total_price = quantity * unit_price
         date = self.cleaned_data['date']
-        print('Got it all')
+        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['isin'])+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
 
-        transaction = super().save(commit)
-        print('Saved Tx')
-        # TODO
-        # - Distinguish between buy, sell and dividend order on Splits
+        transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
+        
+        investmentOperation = models.InvestmentOperation.objects.create(date=date,
+                                                        price=unit_price,account=src,operation_type=operation_type,
+                                                        isin=isin,category=category,quantity=quantity,transaction_id=transaction)
+
+        if operation_type == str(models.InvestmentOperation.BUY):
+            origin_acount = src
+            destination_account = dst
+
+            if src.balance < total_price:
+                raise forms.ValidationError("Not enough Funds")
+            #FIXME Check Avaliable Money
+        elif operation_type == str(models.InvestmentOperation.SELL):
+            origin_acount = dst
+            destination_account = src
+            #FIXME Check Avaliable Assets
+        elif operation_type == str(models.InvestmentOperation.DIV):
+            origin_acount = dst
+            destination_account = src
+            #FIXME Check Avaliable Assets
+        else:
+            raise ValueError('Invalid operation type selected') 
 
         models.Split.objects.update_or_create(
             transaction=transaction, amount__lt=0,
-            defaults={'amount': -total_price, 'account': src,
-                      'opposing_account': dst, 'date': date,
+            defaults={'amount': -total_price, 'account': origin_acount,
+                      'opposing_account': destination_account, 'date': date,
                       'title': transaction.title,
-                      'category': self.cleaned_data['category']})
-        print('Saved Split 1')
+                      'category': category})
 
         models.Split.objects.update_or_create(
             transaction=transaction, amount__gt=0,
-            defaults={'amount': total_price, 'account': dst,
-                      'opposing_account': src, 'date': date,
+            defaults={'amount': total_price, 'account': destination_account,
+                      'opposing_account': origin_acount, 'date': date,
                       'title': transaction.title,
-                      'category': self.cleaned_data['category']})
-        print('Saved Split 2')
+                      'category': category})
 
         return transaction
 

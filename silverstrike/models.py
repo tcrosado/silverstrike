@@ -461,11 +461,7 @@ class RecurringTransaction(models.Model):
         return outstanding
 
 
-class InvestmentOperation(Transaction):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.transaction_type = self.TRANSFER
+class InvestmentOperation(models.Model):
 
     BUY = 0
     SELL = 1
@@ -476,22 +472,15 @@ class InvestmentOperation(Transaction):
         (DIV, 'Dividend')
     )
 
+    date = models.DateField(default=date.today)
     account = models.ForeignKey(Account, models.CASCADE, related_name='investment_transactions')
     operation_type = models.IntegerField(choices=OPERATION_TYPES, default=BUY)
     isin = models.CharField(max_length=64)  # FIXME
     category = models.CharField(max_length=64, null=True)  # FIXME
     quantity = models.IntegerField(default=0)
-
-    def __str__(self):
-        return self.title
-
-    def get_absolute_url(self):
-        return reverse('transaction_detail', args=[self.pk])
-
-    def get_transaction_type_str(self):
-        for i, super.title in self.TRANSACTION_TYPES:
-            if i == self.transaction_type:
-                return super.title
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_id = models.ForeignKey('Transaction', models.CASCADE,
+                                    related_name='transaction',blank=False,null=False)
 
     @property
     def is_buy(self):
@@ -504,3 +493,6 @@ class InvestmentOperation(Transaction):
     @property
     def is_dividend(self):
         return self.operation_type == self.DIV
+
+    def operation_name(self):
+        return self.OPERATION_TYPES[self.operation_type][1]
