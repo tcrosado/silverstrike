@@ -107,3 +107,5 @@ coverage
 # vim tmp files
 *.swp
 .vscode
+
+demo/db\.sqlite3\.stable
