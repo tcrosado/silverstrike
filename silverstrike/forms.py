@@ -272,23 +272,40 @@ class InvestmentOperationForm(forms.ModelForm):
         title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['isin'])+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
 
         transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
+        
         investmentOperation = models.InvestmentOperation.objects.create(date=date,
                                                         price=unit_price,account=src,operation_type=operation_type,
                                                         isin=isin,category=category,quantity=quantity,transaction_id=transaction)
-        # TODO
-        # - Distinguish between buy, sell and dividend order on Splits
+
+        if operation_type == str(models.InvestmentOperation.BUY):
+            origin_acount = src
+            destination_account = dst
+
+            if src.balance < total_price:
+                raise ValueError('Not enough Funds')
+            #FIXME Check Avaliable Money
+        elif operation_type == str(models.InvestmentOperation.SELL):
+            origin_acount = dst
+            destination_account = src
+            #FIXME Check Avaliable Assets
+        elif operation_type == str(models.InvestmentOperation.DIV):
+            origin_acount = dst
+            destination_account = src
+            #FIXME Check Avaliable Assets
+        else:
+            raise ValueError('Invalid operation type selected') 
 
         models.Split.objects.update_or_create(
             transaction=transaction, amount__lt=0,
-            defaults={'amount': -total_price, 'account': src,
-                      'opposing_account': dst, 'date': date,
+            defaults={'amount': -total_price, 'account': origin_acount,
+                      'opposing_account': destination_account, 'date': date,
                       'title': transaction.title,
                       'category': category})
 
         models.Split.objects.update_or_create(
             transaction=transaction, amount__gt=0,
-            defaults={'amount': total_price, 'account': dst,
-                      'opposing_account': src, 'date': date,
+            defaults={'amount': total_price, 'account': destination_account,
+                      'opposing_account': origin_acount, 'date': date,
                       'title': transaction.title,
                       'category': category})
 
