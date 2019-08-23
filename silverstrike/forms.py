@@ -282,7 +282,7 @@ class InvestmentOperationForm(forms.ModelForm):
             destination_account = dst
 
             if src.balance < total_price:
-                raise ValueError('Not enough Funds')
+                raise forms.ValidationError("Not enough Funds")
             #FIXME Check Avaliable Money
         elif operation_type == str(models.InvestmentOperation.SELL):
             origin_acount = dst
