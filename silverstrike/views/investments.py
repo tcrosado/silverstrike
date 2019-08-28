@@ -4,10 +4,12 @@ from dateutil.relativedelta import relativedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.views import generic
 
 from silverstrike.models import InvestmentOperation, SecurityDetails
-from silverstrike.forms import InvestmentOperationForm
+from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm
+
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investments.html'
@@ -54,11 +56,13 @@ class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):#FI
 
 class InvestmentConfigView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_config.html'
+    model = SecurityDetails
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment-config'
-
+        context['stocks'] = SecurityDetails.objects.filter(security_type=SecurityDetails.STOCK)
+        context['reit'] = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT)
         return context
 
 class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):#FIXME
@@ -66,8 +70,7 @@ class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):#FIXME
     template_name = 'silverstrike/investment_security_create.html'
     form_class = InvestmentSecurityForm
 
-
     def get_context_data(self, **kwargs):
-        context = super(InvestmentOperationCreate, self).get_context_data(**kwargs)
+        context = super(SecurityDetailsCreate, self).get_context_data(**kwargs)
         context['menu'] = 'transactions'
         return context
