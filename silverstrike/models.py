@@ -517,4 +517,5 @@ class SecurityDetails(models.Model):
     ticker = models.CharField(max_length=64)
     exchange = models.CharField(max_length=64)
     currency = models.CharField(max_length=3)
-    security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK) #FIXME
+    security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK)
+    ter = models.FloatField(default=0.0)
