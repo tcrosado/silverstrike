@@ -475,7 +475,7 @@ class InvestmentOperation(models.Model):
     date = models.DateField(default=date.today)
     account = models.ForeignKey(Account, models.CASCADE, related_name='investment_transactions')
     operation_type = models.IntegerField(choices=OPERATION_TYPES, default=BUY)
-    isin = models.CharField(max_length=64)  # FIXME
+    isin = models.CharField(max_length=12)  # FIXME
     category = models.CharField(max_length=64, null=True)  # FIXME
     quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -499,6 +499,22 @@ class InvestmentOperation(models.Model):
 
 class SecurityQuantity(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)
-    isin = models.CharField(max_length=64)
+    isin = models.CharField(max_length=12)
     quantity = models.IntegerField(default=0)
 
+class SecurityDetails(models.Model):
+    STOCK = 0
+    REIT = 1
+    BOND = 2
+    SECURITY_TYPES = (
+        (STOCK, 'Stock'),
+        (REIT, 'REIT'),
+        (BOND, 'Bond')
+    )
+
+    isin = models.CharField(max_length=12)
+    name = models.CharField(max_length=64)
+    ticker = models.CharField(max_length=64)
+    exchange = models.CharField(max_length=64)
+    currency = models.CharField(max_length=3)
+    security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK) #FIXME
