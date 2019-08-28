@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.views import generic
 
-from silverstrike.models import InvestmentOperation
+from silverstrike.models import InvestmentOperation, SecurityDetails
 from silverstrike.forms import InvestmentOperationForm
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -53,10 +53,21 @@ class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):#FI
 
 
 class InvestmentConfigView(LoginRequiredMixin, generic.TemplateView):
-    template_name = 'silverstrike/investments.html'
+    template_name = 'silverstrike/investment_config.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment-config'
 
+        return context
+
+class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):#FIXME
+    model = SecurityDetails
+    template_name = 'silverstrike/investment_security_create.html'
+    form_class = InvestmentSecurityForm
+
+
+    def get_context_data(self, **kwargs):
+        context = super(InvestmentOperationCreate, self).get_context_data(**kwargs)
+        context['menu'] = 'transactions'
         return context
