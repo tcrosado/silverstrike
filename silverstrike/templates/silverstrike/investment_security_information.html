@@ -1,0 +1,125 @@
+{% extends 'silverstrike/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content_header %}
+<h1>{{ securityDetails.name }}</h1>
+<ol class="breadcrumb">
+  <li><a href="/">{% trans 'Home' %}</a></li>
+  <li class="active">{% trans 'Charts' %}</li>
+</ol>
+{% endblock %}
+{% block content %}
+<div class="box">
+  <div class="box-header">
+  <div class="row text-center">
+    <button id="12month" class="btn btn-s btn-default range-chooser">{% trans 'Last year' %}</button>
+    <button id="6month" class="btn btn-s btn-default range-chooser">{% trans 'Last 6 Months' %}</button>
+    <button id="3month" class="btn btn-s btn-default range-chooser">{% trans 'Last 3 Months' %}</button>
+    <button id="currentMonth" class="btn btn-s btn-default range-chooser">{% trans 'Current Month' %}</button>
+    <!--button id="custom" class="btn btn-s btn-default range-chooser">Custom Range</button-->
+  </div>
+</div>
+</div>
+<div class="row">
+<div class="col-md-6">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Price</h3>
+    </div>
+    <div class="box-body">
+    </div>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Stats</h3>
+    </div>
+    <div class="box-content">
+        <table class="table">
+          <tr>
+          <th>{% trans 'Current Assets' %}</th><td>{{ currentAssets }}</td>
+        </tr>
+        <tr>
+          <th>{% trans 'Current Price' %}</th><td>0</td>
+        </tr>
+        <tr>
+          <th>{% trans 'Total Price' %}</th><td>0</td>
+        </tr>
+        <tr>
+          <th>{% trans 'Return' %}</th><td class="text-{% if balance < 0 %}red{% else %}green{% endif %}">0</td>
+        </tr>
+        <tr>
+          <th>{% trans 'Total Return' %}</th class="text-{% if balance < 0 %}red{% else %}green{% endif %}"><td>0</td>
+        </tr>
+        </table>
+      </div>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Last Operations</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans 'Ticker' %}</th>
+            <th>{% trans 'Name' %}</th>
+            <th class="hidden-xs">{% trans 'ISIN' %}</th>
+              <th>{% trans 'TER' %}</th>
+            <th>{% trans 'Exchange' %}</th>
+            <th>{% trans 'Currency' %}</th>
+          </tr>
+        <tr>
+          <td>{{ securityDetails.ticker }}</td>
+          <td>{{ securityDetails.name }}</td>
+          <td>{{ securityDetails.isin }}</td>
+          <td>{{ securityDetails.ter }}</td>
+          <td>{{ securityDetails.exchange }}</td>
+          <td>{{ securityDetails.currency }}</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Details</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans 'Ticker' %}</th>
+            <th>{% trans 'Name' %}</th>
+            <th class="hidden-xs">{% trans 'ISIN' %}</th>
+              <th>{% trans 'TER' %}</th>
+            <th>{% trans 'Exchange' %}</th>
+            <th>{% trans 'Currency' %}</th>
+          </tr>
+        <tr>
+          <td>{{ securityDetails.ticker }}</td>
+          <td>{{ securityDetails.name }}</td>
+          <td>{{ securityDetails.isin }}</td>
+          <td>{{ securityDetails.ter }}</td>
+          <td>{{ securityDetails.exchange }}</td>
+          <td>{{ securityDetails.currency }}</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-12">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Distribution</h3>
+    </div>
+    <div class="box-body">
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}
