@@ -15,7 +15,7 @@
     <div class="col-md-12">
       <div class="box">
         <div class="box-body">
-        <a class="btn btn-primary" id="btn-apply" href="/investments/config/create">New Security</a>
+        <a class="btn btn-primary" id="btn-apply" href="{% url 'investment_security_new' %}">New Security</a>
         </div>
       </div>
     </div>
@@ -39,7 +39,7 @@
         {% for security in stocks %}
         <tr>
           <td>{{ security.ticker }}</td>
-          <td>{{ security.name }}</td>
+            <td><a href="{% url 'investment_security_details' security.id %}">{{ security.name }}</a></td>
           <td>{{ security.isin }}</td>
           <td>{{ security.ter }}</td>
           <td>{{ security.exchange }}</td>
@@ -68,7 +68,7 @@
         {% for security in reit %}
         <tr>
           <td>{{ security.ticker }}</td>
-          <td>{{ security.name }}</td>
+          <td><a href="{% url 'investment_security_details' security.id %}">{{ security.name }}</a></td>
           <td>{{ security.isin }}</td>
           <td>{{ security.ter }}</td>
           <td>{{ security.exchange }}</td>
@@ -96,7 +96,7 @@
         {% for security in securities %}
         <tr>
           <td>{{ transaction.ticker }}</td>
-          <td>{{ transaction.name }}</td>
+          <td><a href="{% url 'investment_security_details' security.id %}">{{ transaction.name }}</a></td>
           <td>{{ transaction.isin }}</td>
           <td>{{ transaction.exchange }}</td>
           <td>{{ transaction.currency }}</td>
