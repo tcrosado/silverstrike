@@ -20,13 +20,14 @@ def import_transactions(csv_path):
                     book_date=datetime.datetime.strptime(line[1], '%Y-%m-%d').date(),
                     transaction_date=datetime.datetime.strptime(line[0], '%Y-%m-%d').date(),
                     opposing_account=line[3],
-                    opposing_account_iban=line[4],
                     account_iban=line[2],
-                    amount=float(line[5].replace('.', '').replace(',', '.'))
+                    amount=float(line[4].replace('.', '').replace(',', '.'))
                 )
 
                 lines.append(statement)
-            except ValueError:
+            except ValueError as e:
+                print(e)
+
                 print('Error')
                 # first line contains headers
                 pass
