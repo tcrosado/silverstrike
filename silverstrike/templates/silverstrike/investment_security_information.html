@@ -55,6 +55,9 @@
         </tr>
         </table>
       </div>
+    <div class="box-footer">
+      <a href="#" class="btn btn-default">{% trans 'Update Prices' %}</a>
+    </div>
   </div>
 </div>
 <div class="col-md-6">
@@ -109,16 +112,72 @@
         </tr>
        </table>
     </div>
+    <div class="box-footer">
+        <a href="#" class="btn btn-primary">{% trans 'Edit' %}</a>
+    </div>
   </div>
 </div>
 <div class="col-md-12">
   <div class="box">
     <div class="box-header">
       <h3 class="box-title">Distribution</h3>
+
     </div>
     <div class="box-body">
+
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans '' %}</th>
+            <th>{% trans 'North America' %}</th>
+            <th>{% trans 'Latin America' %}</th>
+            <th>{% trans 'UK' %}</th>
+              <th>{% trans 'EuroZone' %}</th>
+            <th>{% trans 'Europe ex-EZ' %}</th>
+            <th>{% trans 'Europe Emerging' %}</th>
+            <th>{% trans 'Africa' %}</th>
+            <th>{% trans 'Middle East/Asia' %}</th>
+            <th>{% trans 'Japan' %}</th>
+            <th>{% trans 'Australasia' %}</th>
+            <th>{% trans 'Asia Developed' %}</th>
+            <th>{% trans 'Asia Emerging' %}</th>
+          </tr>
+        <tr>
+          <td>{% trans '%' %}</td>
+          <td>{{ securityDetails.ticker }}</td>
+          <td>{{ securityDetails.name }}</td>
+          <td>{{ securityDetails.isin }}</td>
+          <td>{{ securityDetails.ter }}</td>
+          <td>{{ securityDetails.exchange }}</td>
+          <td>{{ securityDetails.currency }}</td>
+           <td>{{ securityDetails.ticker }}</td>
+          <td>{{ securityDetails.name }}</td>
+          <td>{{ securityDetails.isin }}</td>
+          <td>{{ securityDetails.ter }}</td>
+          <td>{{ securityDetails.exchange }}</td>
+          <td>{{ securityDetails.currency }}</td>
+        </tr>
+        <tr>
+          <td>{% trans '€' %}</td>
+          <td>{{ securityDetails.ticker }}</td>
+          <td>{{ securityDetails.name }}</td>
+          <td>{{ securityDetails.isin }}</td>
+          <td>{{ securityDetails.ter }}</td>
+          <td>{{ securityDetails.exchange }}</td>
+          <td>{{ securityDetails.currency }}</td>
+           <td>{{ securityDetails.ticker }}</td>
+          <td>{{ securityDetails.name }}</td>
+          <td>{{ securityDetails.isin }}</td>
+          <td>{{ securityDetails.ter }}</td>
+          <td>{{ securityDetails.exchange }}</td>
+          <td>{{ securityDetails.currency }}</td>
+        </tr>
+       </table>
+    </div>
+    <div class="box-footer">
+        <a href="{% url 'investment_security_distribution' securityDetails.id %}" class="btn btn-primary">{% trans 'Edit' %}</a>
     </div>
   </div>
+
 </div>
 </div>
 

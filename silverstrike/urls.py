@@ -80,6 +80,8 @@ urlpatterns = [
          investment_views.InvestmentConfigView.as_view(), name='investment-config'),
     path('investments/security/create',
          investment_views.SecurityDetailsCreate.as_view(), name='investment_security_new'),
+    path('investments/security/<int:pk>/distribution/create',
+         investment_views.SecurityDistributionCreate.as_view(), name='investment_security_distribution'),
     path('investments/security/<int:pk>/',
          investment_views.SecurityDetailsInformation.as_view(), name='investment_security_details'),
     path('recurrences/',

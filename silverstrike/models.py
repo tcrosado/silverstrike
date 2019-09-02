@@ -519,3 +519,36 @@ class SecurityDetails(models.Model):
     currency = models.CharField(max_length=3)
     security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK)
     ter = models.FloatField(default=0.0)
+
+class SecurityDistribution(models.Model):
+    NA = 0
+    LA = 1
+    UK = 2
+    EZ = 3
+    EUEZ = 4
+    EUEM = 5
+    AF = 6
+    ME = 7
+    JP = 8
+    AU = 9
+    AD = 10
+    AE = 11
+
+    REGIONS = {
+        (NA,'North America'),
+        (LA,'Latin America'),
+        (UK,'United Kingdom'),
+        (EZ,'Euro Zone'),
+        (EUEZ,'Europe Ex-EZ'),
+        (EUEM,'Europe Emerging'),
+        (AF,'Africa'),
+        (ME, 'Middle East/Asia'),
+        (JP, 'Japan'),
+        (AU, 'Australasia'),
+        (AD, 'Asia Developed'),
+        (AE, 'Asia Emerging')
+    }
+
+    isin = models.CharField(max_length=12)
+    allocation = models.FloatField(default=0.0)
+    regionId = models.IntegerField(choices=REGIONS, default=EZ)

@@ -352,4 +352,18 @@ class InvestmentSecurityForm(forms.ModelForm):
     security_type = forms.ChoiceField(choices=models.SecurityDetails.SECURITY_TYPES, required=True)
     ter = forms.FloatField()
 
+class InvestmentSecurityDistributionForm(forms.ModelForm):
+    class Meta:
+        model = models.SecurityDetails
+        fields = ['isin', 'name', 'ticker', 'exchange', 'currency', 'security_type', "ter"]
+
+    isin = forms.CharField(max_length=12, label=_('ISIN'),
+                                     widget=forms.TextInput(attrs={'autocomplete': 'off'}))
+    name = forms.CharField()
+    ticker = forms.CharField()
+    exchange = forms.CharField()
+    currency = forms.CharField(max_length=3)
+    security_type = forms.ChoiceField(choices=models.SecurityDetails.SECURITY_TYPES, required=True)
+    ter = forms.FloatField()
+
 CategoryAssignFormset = forms.modelformset_factory(models.Split, fields=('category',), extra=0)
