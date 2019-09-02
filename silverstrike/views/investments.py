@@ -7,8 +7,8 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 
-from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity
-from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm
+from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution
+from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm
 
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -17,7 +17,17 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_overview'
+        quantities = SecurityQuantity.objects.all()
+        securityQuant = dict()
+        for security in quantities:
+            securityQuant[security.isin] = security.quantity
+        stocks = SecurityDetails.objects.filter(security_type=SecurityDetails.STOCK,isin__in=securityQuant.keys())
+        reit = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT,isin__in=securityQuant.keys())
+        bonds = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND,isin__in=securityQuant.keys())
 
+        context['stocks'] = [(securityQuant[security.isin], security) for security in stocks]
+        context['reit'] = [(securityQuant[security.isin], security) for security in reit]
+        context['bonds'] = [(securityQuant[security.isin], security) for security in bonds]
         return context
 
 
@@ -30,7 +40,6 @@ class InvestmentOperationsView(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_operations'
         context['transactions'] = InvestmentOperation.objects.all()
-
         return context
 
 
@@ -77,6 +86,15 @@ class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIX
         context['menu'] = 'transactions'
         return context
 
+class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME
+    model = SecurityDistribution
+    template_name = 'silverstrike/investment_security_create.html'
+    form_class = InvestmentSecurityDistributionForm
+
+    def get_context_data(self, **kwargs):
+        context = super(SecurityDistributionCreate, self).get_context_data(**kwargs)
+        context['menu'] = 'transactions'
+        return context
 
 class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_security_information.html'
