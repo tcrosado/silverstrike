@@ -551,4 +551,9 @@ class SecurityDistribution(models.Model):
 
     isin = models.CharField(max_length=12)
     allocation = models.FloatField(default=0.0)
-    regionId = models.IntegerField(choices=REGIONS, default=EZ)
+    region_id = models.IntegerField(choices=REGIONS, default=EZ)
+
+class SecurityPrice(models.Model):
+    ticker = models.CharField(max_length=12)
+    date = models.DateField(default=date.today)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
