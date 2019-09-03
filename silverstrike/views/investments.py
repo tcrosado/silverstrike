@@ -7,7 +7,8 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 
-from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution
+from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
+    SecurityPrice
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm
 
 
@@ -70,11 +71,26 @@ class InvestmentConfigView(LoginRequiredMixin, generic.TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu'] = 'investment-config'
+        context['menu'] = 'investment_security_list'
         context['stocks'] = SecurityDetails.objects.filter(security_type=SecurityDetails.STOCK)
         context['reit'] = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT)
         return context
 
+class InvestmentConfigPriceView(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'silverstrike/investment_config.html'
+    model = SecurityPrice
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = 'investment_security_pricing'
+        return context
+
+class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'silverstrike/investment_config.html'
+    model = SecurityPrice
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = 'investment_security_pricing'
+        return context
 
 class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME
     model = SecurityDetails
