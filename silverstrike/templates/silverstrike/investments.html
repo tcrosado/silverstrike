@@ -22,7 +22,7 @@
 </div>
 </div>
 <div class="row">
-<div class="col-md-6">
+<div class="col-md-8">
 <div class="box">
   <div class="box-header">
     <h3 class="box-title">Cens</h3>
@@ -31,31 +31,6 @@
     <canvas id="balanceChart" width="400" height="200"></canvas>
   </div>
 </div>
-</div>
-<div class="col-md-2">
-  <div class="box">
-    <div class="box-header">
-      <h3 class="box-title">Distribution</h3>
-    </div>
-    <div class="box-body">
-      <table class="table table-striped">
-        <tr>
-          <th></th>
-          <th>{% trans 'Actual' %}</th>
-          <th>{% trans 'Planned' %}</th>
-        </tr>
-          <tr>
-          <th>{% trans 'Stocks' %}</th><td>0</td><td>0</td>
-        </tr>
-        <tr>
-          <th>{% trans 'REIT' %}</th><td>0</td><td>0</td>
-        </tr>
-        <tr>
-          <th>{% trans 'Bonds' %}</th><td>0</td><td>0</td>
-        </tr>
-        </table>
-    </div>
-  </div>
 </div>
 <div class="col-md-4">
   <div class="box">
@@ -72,6 +47,97 @@
         </tr>
         <tr>
           <th>{% trans 'Total Value' %}</th><td>0 (0%)</td>
+        </tr>
+        </table>
+    </div>
+  </div>
+</div>
+</div>
+<div class="row">
+<div class="col-md-8">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">World Distribution</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans '' %}</th>
+            <th>{% trans 'North Am' %}</th>
+            <th>{% trans 'Latin Am' %}</th>
+              <th>{% trans 'UK' %}</th>
+            <th>{% trans 'Euro' %}</th>
+            <th>{% trans 'Euro ExEZ' %}</th>
+            <th>{% trans 'Euro Em' %}</th>
+            <th>{% trans 'Africa' %}</th>
+            <th>{% trans 'ME' %}</th>
+            <th>{% trans 'JP' %}</th>
+            <th>{% trans 'Australasia' %}</th>
+            <th>{% trans 'Asia Dev' %}</th>
+            <th>{% trans 'Asia Em' %}</th>
+          </tr>
+         <tr>
+            <th>{% trans 'Stocks' %}</th>
+            <td>0 (-20%)</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+      <br>
+      <table class="table table-striped">
+          <tr>
+            <th></th>
+            <th>{% trans '1-3Y' %}</th>
+            <th>{% trans '3-5Y' %}</th>
+            <th>{% trans '5-7Y' %}</th>
+            <th>{% trans '7-10Y' %}</th>
+            <th>{% trans '10-15Y' %}</th>
+            <th>{% trans '15-20Y' %}</th>
+            <th>{% trans '20-30Y' %}</th>
+            <th>{% trans '30+' %}</th>
+            <th>{% trans 'USA' %}</th>
+            <th>{% trans 'EU' %}</th>
+          </tr>
+        <tr>
+            <th>{% trans 'Bonds' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div><div class="col-md-4">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Asset Distribution</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+        <tr>
+          <th>{% trans 'Stocks' %}</th><td>74%</td><td>(4%)</td>
+        </tr>
+        <tr>
+          <th>{% trans 'REIT' %}</th><td>0</td><td>0</td>
+        </tr>
+        <tr>
+          <th>{% trans 'Bonds' %}</th><td>0</td><td>0</td>
         </tr>
         </table>
     </div>
