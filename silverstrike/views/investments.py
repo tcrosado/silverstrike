@@ -3,6 +3,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
@@ -102,15 +103,26 @@ class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIX
         context['menu'] = 'transactions'
         return context
 
-class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME
-    model = SecurityDistribution
-    template_name = 'silverstrike/investment_security_create.html'
+class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # FIXME
+    template_name = 'silverstrike/investment_security_distribution_edit.html'
     form_class = InvestmentSecurityDistributionForm
 
     def get_context_data(self, **kwargs):
         context = super(SecurityDistributionCreate, self).get_context_data(**kwargs)
         context['menu'] = 'transactions'
         return context
+
+    def post(self, request, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        security_id = context['pk']
+        security = SecurityDetails.objects.get(pk=security_id)
+        request_data = dict(request.POST.lists())
+        for key in request_data.keys():
+            if key == 'csrfmiddlewaretoken': #FIXME
+                continue
+            SecurityDistribution.objects.create(isin=security.isin, allocation=float(request_data[key][0]), region_id=int(key))
+
+        return HttpResponseRedirect("/")
 
 class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_security_information.html'
