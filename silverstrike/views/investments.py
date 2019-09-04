@@ -120,7 +120,12 @@ class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # 
         for key in request_data.keys():
             if key == 'csrfmiddlewaretoken': #FIXME
                 continue
-            SecurityDistribution.objects.create(isin=security.isin, allocation=float(request_data[key][0]), region_id=int(key))
+            try:
+                dist = SecurityDistribution.objects.get(isin=security.isin,region_id=int(key))
+                dist.allocation = float(request_data[key][0])
+                dist.save()
+            except SecurityDistribution.DoesNotExist:
+                SecurityDistribution.objects.create(isin=security.isin, region_id=int(key), allocation=float(request_data[key][0]))
 
         return HttpResponseRedirect("/")
 
