@@ -99,9 +99,29 @@ class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIX
     form_class = InvestmentSecurityForm
 
     def get_context_data(self, **kwargs):
-        context = super(SecurityDetailsCreate, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
+
         context['menu'] = 'transactions'
         return context
+
+    def get_success_url(self):
+        return reverse('investment_security_list')
+
+class SecurityDetailsUpdate(LoginRequiredMixin, generic.edit.UpdateView):  # FIXME
+    model = SecurityDetails
+    template_name = 'silverstrike/investment_security_create.html'
+    form_class = InvestmentSecurityForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'pk' in context:
+            print(context['pk'])
+        print(context)
+        context['menu'] = 'transactions'
+        return context
+
+    def get_success_url(self):
+        return reverse('investment_security_list')
 
 class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # FIXME
     template_name = 'silverstrike/investment_security_distribution_edit.html'
@@ -136,6 +156,10 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'security_details'
         context['securityDetails'] = SecurityDetails.objects.get(pk=context['pk'])
-        context['currentAssets'] = SecurityQuantity.objects.get(isin=context['securityDetails'].isin).quantity
+        try:
+            assets = SecurityQuantity.objects.get(isin=context['securityDetails'].isin).quantity
+        except SecurityQuantity.DoesNotExist:
+            assets = 0
+        context['currentAssets'] = assets
         context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
         return context
