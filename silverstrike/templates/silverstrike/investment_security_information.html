@@ -126,35 +126,20 @@
     <div class="box-body">
 
       <table class="table table-striped">
+
           <tr>
             <th>{% trans '' %}</th>
-            <th>{% trans 'North America' %}</th>
-            <th>{% trans 'Latin America' %}</th>
-            <th>{% trans 'UK' %}</th>
-              <th>{% trans 'EuroZone' %}</th>
-            <th>{% trans 'Europe ex-EZ' %}</th>
-            <th>{% trans 'Europe Emerging' %}</th>
-            <th>{% trans 'Africa' %}</th>
-            <th>{% trans 'Middle East/Asia' %}</th>
-            <th>{% trans 'Japan' %}</th>
-            <th>{% trans 'Australasia' %}</th>
-            <th>{% trans 'Asia Developed' %}</th>
-            <th>{% trans 'Asia Emerging' %}</th>
+
+            {% for element in securityDistribution.0.REGIONS %}
+              <th>{% trans element.1 %}</th>
+
+            {% endfor %}
           </tr>
         <tr>
-          <td>{% trans '%' %}</td>
-          <td>{{ securityDetails.ticker }}</td>
-          <td>{{ securityDetails.name }}</td>
-          <td>{{ securityDetails.isin }}</td>
-          <td>{{ securityDetails.ter }}</td>
-          <td>{{ securityDetails.exchange }}</td>
-          <td>{{ securityDetails.currency }}</td>
-           <td>{{ securityDetails.ticker }}</td>
-          <td>{{ securityDetails.name }}</td>
-          <td>{{ securityDetails.isin }}</td>
-          <td>{{ securityDetails.ter }}</td>
-          <td>{{ securityDetails.exchange }}</td>
-          <td>{{ securityDetails.currency }}</td>
+          <td>{% trans 'Percentage' %}</td>
+          {% for element in securityDistribution %}
+            <td>{{ element.allocation }} %</td>
+          {% endfor %}
         </tr>
         <tr>
           <td>{% trans '€' %}</td>

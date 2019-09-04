@@ -137,4 +137,5 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         context['menu'] = 'security_details'
         context['securityDetails'] = SecurityDetails.objects.get(pk=context['pk'])
         context['currentAssets'] = SecurityQuantity.objects.get(isin=context['securityDetails'].isin).quantity
+        context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
         return context

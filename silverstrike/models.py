@@ -535,7 +535,7 @@ class SecurityDistribution(models.Model):
     AD = 10
     AE = 11
 
-    REGIONS = {
+    REGIONS = (
         (NA,'North America'),
         (LA,'Latin America'),
         (UK,'United Kingdom'),
@@ -548,7 +548,7 @@ class SecurityDistribution(models.Model):
         (AU, 'Australasia'),
         (AD, 'Asia Developed'),
         (AE, 'Asia Emerging')
-    }
+    )
 
     class Meta:
         unique_together = (('isin', 'region_id'),)
