@@ -503,6 +503,7 @@ class SecurityQuantity(models.Model):
     quantity = models.IntegerField(default=0)
 
 class SecurityDetails(models.Model):
+
     STOCK = 0
     REIT = 1
     BOND = 2
@@ -548,6 +549,9 @@ class SecurityDistribution(models.Model):
         (AD, 'Asia Developed'),
         (AE, 'Asia Emerging')
     }
+
+    class Meta:
+        unique_together = (('isin', 'region_id'),)
 
     isin = models.CharField(max_length=12)
     allocation = models.FloatField(default=0.0)
