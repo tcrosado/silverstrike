@@ -42,10 +42,10 @@
           <th>{% trans 'Current Assets' %}</th><td>{{ currentAssets }}</td>
         </tr>
         <tr>
-          <th>{% trans 'Current Price' %}</th><td>0</td>
+          <th>{% trans 'Current Price' %}</th><td>{{ securityPrice.price }} €</td>
         </tr>
         <tr>
-          <th>{% trans 'Total Price' %}</th><td>0</td>
+          <th>{% trans 'Total Price' %}</th><td>{{ totalPrice }} €</td>
         </tr>
         <tr>
           <th>{% trans 'Return' %}</th><td class="text-{% if balance < 0 %}red{% else %}green{% endif %}">0</td>
@@ -56,7 +56,12 @@
         </table>
       </div>
     <div class="box-footer">
-      <a href="#" class="btn btn-default">{% trans 'Update Prices' %}</a>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="update_price" class="btn btn-default">{% trans 'Update Prices' %}</button>
+      </form>
+              <small>Last update: {{ securityPrice.date }}</small>
+
     </div>
   </div>
 </div>
@@ -113,7 +118,7 @@
        </table>
     </div>
     <div class="box-footer">
-        <a href="{% url 'investment_security_update' securityDetails.id %}" class="btn btn-primary">{% trans 'Edit' %}</a>
+      <a href="{% url 'investment_security_update' securityDetails.id %}" class="btn btn-primary">{% trans 'Edit' %}</a>
 
     </div>
   </div>

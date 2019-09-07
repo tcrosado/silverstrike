@@ -147,8 +147,6 @@ urlpatterns = [
     path('api/update_current_recurrences/',
          recurrence_views.ReccurrenceSetNextOccurence.as_view(),
          name='update_current_recurrences'),
-
-
     path('manifest.json', TemplateView.as_view(template_name='silverstrike/manifest.json'),
          name='manifest'),
 

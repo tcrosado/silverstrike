@@ -8,6 +8,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 
+from silverstrike.lib import update_security_price
 from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
     SecurityPrice
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm
@@ -156,10 +157,21 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'security_details'
         context['securityDetails'] = SecurityDetails.objects.get(pk=context['pk'])
+        last_price = SecurityPrice.objects.order_by('date').last()
+        context['securityPrice'] = last_price
         try:
             assets = SecurityQuantity.objects.get(isin=context['securityDetails'].isin).quantity
         except SecurityQuantity.DoesNotExist:
             assets = 0
         context['currentAssets'] = assets
+        context['totalPrice'] = last_price.price * assets
         context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
         return context
+
+    def post(self,request, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        security_id = context['pk']
+        security = SecurityDetails.objects.get(pk=security_id)
+        update_security_price(security.ticker)
+        #TODO wait for price update on frontend
+        return HttpResponseRedirect(reverse('investment_security_details', args=[security_id]))
