@@ -1,3 +1,4 @@
+import decimal
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
@@ -166,6 +167,11 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         context['currentAssets'] = assets
         context['totalPrice'] = last_price.price * assets
         context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
+        price_distribution = []
+        for region in context['securityDistribution']:
+            price_distribution.append(context['totalPrice'] * decimal.Decimal(region.allocation/100))
+        context['securityDistributionPrice'] = price_distribution
+
         return context
 
     def post(self,request, *args, **kwargs):

@@ -12,7 +12,7 @@ def update_security_price(ticker,start=None,end=None):
     if most_recent != None:
         if most_recent.date == datetime.datetime.now():
             return True
-        
+
         next_date = most_recent.date + datetime.timedelta(days=1)
         data_list = yf.download(ticker, start=next_date.strftime('%Y-%m-%d'))['Close']
     else:

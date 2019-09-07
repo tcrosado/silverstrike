@@ -148,19 +148,10 @@
           {% endfor %}
         </tr>
         <tr>
-          <td>{% trans '€' %}</td>
-          <td>{{ securityDetails.ticker }}</td>
-          <td>{{ securityDetails.name }}</td>
-          <td>{{ securityDetails.isin }}</td>
-          <td>{{ securityDetails.ter }}</td>
-          <td>{{ securityDetails.exchange }}</td>
-          <td>{{ securityDetails.currency }}</td>
-           <td>{{ securityDetails.ticker }}</td>
-          <td>{{ securityDetails.name }}</td>
-          <td>{{ securityDetails.isin }}</td>
-          <td>{{ securityDetails.ter }}</td>
-          <td>{{ securityDetails.exchange }}</td>
-          <td>{{ securityDetails.currency }}</td>
+          <td>{% trans 'Amount' %}</td>
+          {% for element in securityDistributionPrice %}
+            <td>{{ element |floatformat:2 }} €</td>
+          {% endfor %}
         </tr>
        </table>
     </div>
