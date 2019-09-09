@@ -135,7 +135,8 @@ urlpatterns = [
     path('reports/', report_views.ReportView.as_view(), name='reports'),
     path('reports/income-expense', report_views.IncomeExpenseReport.as_view(),
          name='income_expense_report'),
-
+    path('api/investment/security/<int:security_id>/price/<dstart>/<dend>/',
+         api.get_security_prices, name='api_security_prices'),
     path('api/accounts/<account_type>/', api.get_accounts, name='api_accounts'),
     path('api/balance/<dstart>/<dend>/', api.get_balances, name='api_balance'),
     path('api/account/<int:account_id>/balance/<dstart>/<dend>/',

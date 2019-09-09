@@ -1,5 +1,5 @@
 import decimal
-from datetime import date
+from datetime import date,datetime
 
 from dateutil.relativedelta import relativedelta
 
@@ -160,6 +160,10 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         context['securityDetails'] = SecurityDetails.objects.get(pk=context['pk'])
         last_price = SecurityPrice.objects.order_by('date').last()
         context['securityPrice'] = last_price
+        today = date.today()
+        begining = datetime.strptime(str(today.year), '%Y')
+
+        context['dates'] = [begining.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d")]
         try:
             assets = SecurityQuantity.objects.get(isin=context['securityDetails'].isin).quantity
         except SecurityQuantity.DoesNotExist:
