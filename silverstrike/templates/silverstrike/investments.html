@@ -48,6 +48,9 @@
         <tr>
           <th>{% trans 'Total Value' %}</th><td>0 (0%)</td>
         </tr>
+        <tr>
+          <th>{% trans 'Total Return' %}</th><td>0 (0%)</td>
+        </tr>
         </table>
     </div>
   </div>
@@ -123,7 +126,7 @@
        </table>
     </div>
   </div>
-</div><div class="col-md-4">
+</div><div class="col-md-2">
   <div class="box">
     <div class="box-header">
       <h3 class="box-title">Asset Distribution</h3>
@@ -131,13 +134,16 @@
     <div class="box-body">
       <table class="table table-striped">
         <tr>
-          <th>{% trans 'Stocks' %}</th><td>74%</td><td>(4%)</td>
+          <th></th><th>Actual</th>
         </tr>
         <tr>
-          <th>{% trans 'REIT' %}</th><td>0</td><td>0</td>
+          <th>{% trans 'Stocks' %}</th><td>74%</td><td>(-10%)</td>
         </tr>
         <tr>
-          <th>{% trans 'Bonds' %}</th><td>0</td><td>0</td>
+          <th>{% trans 'REIT' %}</th><td>0</td><td>(-10%)</td>
+        </tr>
+        <tr>
+          <th>{% trans 'Bonds' %}</th><td>0</td><td>(-10%)</td>
         </tr>
         </table>
     </div>

@@ -1,0 +1,200 @@
+{% extends 'silverstrike/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content_header %}
+<h1>{% trans 'Investment Configurations' %}</h1>
+<ol class="breadcrumb">
+  <li><a href="/">{% trans 'Home' %}</a></li>
+  <li class="active">{% trans 'Charts' %}</li>
+</ol>
+{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+        <a class="btn btn-default" id="btn-apply" href="{% url 'investment_security_list' %}">Security List</a>
+        <a class="btn btn-default" id="btn-apply" href="{% url 'investment_security_pricing' %}">Security History</a>
+        <a class="btn btn-default active" id="btn-apply" href="{% url 'investment_portfolio_target' %}">Target Portfolio</a>
+        <a class="btn btn-primary pull-right" id="btn-apply" href="{% url 'investment_target_update' %}">Update Target</a>
+
+        </div>
+      </div>
+    </div>
+</div>
+<div class="row">
+<div class="col-md-4">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Asset Distribution</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans '' %}</th>
+            <th>{% trans 'Stocks' %}</th>
+            <th>{% trans 'Bonds' %}</th>
+              <th>{% trans 'REIT' %}</th>
+
+          </tr>
+         <tr>
+            <th>{% trans 'Target' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+          <tr>
+            <th>{% trans 'Actual' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+          <tr>
+            <th>{% trans 'Delta' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-8">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Bond Distribution</h3>
+    </div>
+    <div class="box-body">
+       <table class="table table-striped">
+          <tr>
+            <th></th>
+            <th>{% trans '1-3Y' %}</th>
+            <th>{% trans '3-5Y' %}</th>
+            <th>{% trans '5-7Y' %}</th>
+            <th>{% trans '7-10Y' %}</th>
+            <th>{% trans '10-15Y' %}</th>
+            <th>{% trans '15-20Y' %}</th>
+            <th>{% trans '20-30Y' %}</th>
+            <th>{% trans '30+' %}</th>
+            <th>{% trans 'USA' %}</th>
+            <th>{% trans 'EU' %}</th>
+          </tr>
+        <tr>
+            <th>{% trans 'Target' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+           <tr>
+            <th>{% trans 'Actual' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+           <tr>
+            <th>{% trans 'Delta' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-12">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Stock Distribution</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans '' %}</th>
+            <th>{% trans 'North Am' %}</th>
+            <th>{% trans 'Latin Am' %}</th>
+              <th>{% trans 'UK' %}</th>
+            <th>{% trans 'Euro' %}</th>
+            <th>{% trans 'Euro ExEZ' %}</th>
+            <th>{% trans 'Euro Em' %}</th>
+            <th>{% trans 'Africa' %}</th>
+            <th>{% trans 'ME' %}</th>
+            <th>{% trans 'JP' %}</th>
+            <th>{% trans 'Australasia' %}</th>
+            <th>{% trans 'Asia Dev' %}</th>
+            <th>{% trans 'Asia Em' %}</th>
+          </tr>
+         <tr>
+            <th>{% trans 'Target' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+          <tr>
+            <th>{% trans 'Actual' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+          <tr>
+            <th>{% trans 'Delta' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}

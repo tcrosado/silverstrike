@@ -561,3 +561,11 @@ class SecurityPrice(models.Model):
     ticker = models.CharField(max_length=12)
     date = models.DateField(default=date.today)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+class SecurityTypeTarget(models.Model):
+    security_type = models.IntegerField(choices=SecurityDetails.SECURITY_TYPES, default=SecurityDetails.STOCK)
+    allocation = models.FloatField(default=0.0)
+
+class SecurityRegionTarget(models.Model):
+    region_id = models.IntegerField(choices=SecurityDistribution.REGIONS, default=SecurityDistribution.EZ)
+    allocation = models.FloatField(default=0.0)
