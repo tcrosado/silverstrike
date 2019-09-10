@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 
 from silverstrike import importers, models
-from silverstrike.models import Transaction, InvestmentOperation, Split, SecurityDistribution
+from silverstrike.models import Transaction, InvestmentOperation, Split, SecurityDistribution, SecurityDetails
 
 
 class ImportUploadForm(forms.ModelForm):
@@ -358,10 +358,29 @@ class InvestmentSecurityDistributionForm(forms.Form):
             self.id = id
             self.name = name
             self.field = forms.FloatField(max_value=100.0, min_value=0.0)
+            #TODO total sum must be less than 100%
 
     distributions = []
     for i in SecurityDistribution.REGIONS:
         reg = Region(i[0],i[1])
         distributions.append(reg)
+
+
+class InvestmentTargetUpdateForm(forms.Form):
+    class Target:
+        def __init__(self, id, name):
+            self.id = id
+            self.name = name
+            self.field = forms.FloatField(max_value=100.0, min_value=0.0)
+
+    regionDistributions = []
+    securityTypeDistributions = []
+    for i in SecurityDistribution.REGIONS:
+        reg = Target(i[0],i[1])
+        regionDistributions.append(reg)
+
+    for i in SecurityDetails.SECURITY_TYPES:
+        reg = Target(i[0], i[1])
+        securityTypeDistributions.append(reg)
 
 CategoryAssignFormset = forms.modelformset_factory(models.Split, fields=('category',), extra=0)
