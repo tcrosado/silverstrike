@@ -11,7 +11,7 @@ from django.views import generic
 
 from silverstrike.lib import update_security_price
 from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
-    SecurityPrice, SecurityTypeTarget, SecurityRegionTarget
+    SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm
 
@@ -93,6 +93,10 @@ class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_portfolio_target'
+        context['targetAssets'] = SecurityTypeTarget.objects.all()
+        context['targetWorld'] = SecurityRegionTarget.objects.all()
+        context['targetMaturityBonds'] = SecurityBondMaturityTarget.objects.all()
+        context['targetRegionBonds'] = SecurityBondRegionTarget.objects.all()
         return context
 
 class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
@@ -112,18 +116,20 @@ class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
         request_data = dict(request.POST.lists())
 
         for key in request_data.keys():
+            print(key)
+
             if key == 'csrfmiddlewaretoken': #FIXME
                 continue
             elif key.startswith('R'):
                 region_id = int(key.split('R')[1])
                 allocation = float(request_data[key][0])
+
                 try:
                     target_asset = SecurityRegionTarget.objects.get(region_id=region_id)
                     target_asset.allocation = allocation
                     target_asset.save()
                 except SecurityRegionTarget.DoesNotExist:
                     SecurityRegionTarget.objects.create(region_id=region_id, allocation=allocation)
-
             elif key.startswith('A'):
                 security_type = int(key.split('A')[1])
                 allocation = float(request_data[key][0])
@@ -133,7 +139,26 @@ class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
                     target_asset.save()
                 except SecurityTypeTarget.DoesNotExist:
                     SecurityTypeTarget.objects.create(security_type=security_type,allocation=allocation)
-        return reverse('investment_portfolio_target')
+            elif key.startswith('BM'):
+                maturity_id = int(key.split('BM')[1])
+                allocation = float(request_data[key][0])
+                try:
+                    target_asset = SecurityBondMaturityTarget.objects.get(maturity_id=maturity_id)
+                    target_asset.allocation = allocation
+                    target_asset.save()
+                except SecurityBondMaturityTarget.DoesNotExist:
+                    SecurityBondMaturityTarget.objects.create(maturity_id=maturity_id, allocation=allocation)
+            elif key.startswith('BR'):
+                region_id = int(key.split('BR')[1])
+                allocation = float(request_data[key][0])
+                try:
+                    target_asset = SecurityBondRegionTarget.objects.get(region_id=region_id)
+                    target_asset.allocation = allocation
+                    target_asset.save()
+                except SecurityBondRegionTarget.DoesNotExist:
+                    SecurityBondRegionTarget.objects.create(region_id=region_id, allocation=allocation)
+
+        return HttpResponseRedirect(reverse('investment_portfolio_target'))
 
 
 class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME
