@@ -235,7 +235,10 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         except SecurityQuantity.DoesNotExist:
             assets = 0
         context['currentAssets'] = assets
-        context['totalPrice'] = last_price.price * assets
+        if last_price == None:
+            context['totalPrice'] = 0
+        else:
+            context['totalPrice'] = last_price.price * assets
         context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
         price_distribution = []
         for region in context['securityDistribution']:
