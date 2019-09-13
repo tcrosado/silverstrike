@@ -3,7 +3,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 
 from silverstrike import importers, models
-from silverstrike.models import Transaction, InvestmentOperation, Split, SecurityDistribution, SecurityDetails
+from silverstrike.models import Transaction, InvestmentOperation, Split, SecurityDistribution, SecurityDetails, \
+    SecurityBondRegionTarget, SecurityBondMaturityTarget
 
 
 class ImportUploadForm(forms.ModelForm):
@@ -375,6 +376,10 @@ class InvestmentTargetUpdateForm(forms.Form):
 
     regionDistributions = []
     securityTypeDistributions = []
+
+    bondMaturityDistributions = []
+    bondRegionDistributions = []
+
     for i in SecurityDistribution.REGIONS:
         reg = Target(i[0],i[1])
         regionDistributions.append(reg)
@@ -382,5 +387,14 @@ class InvestmentTargetUpdateForm(forms.Form):
     for i in SecurityDetails.SECURITY_TYPES:
         reg = Target(i[0], i[1])
         securityTypeDistributions.append(reg)
+
+    for i in SecurityBondMaturityTarget.MATURITY:
+        reg = Target(i[0], i[1])
+        bondMaturityDistributions.append(reg)
+
+    for i in SecurityBondRegionTarget.REGIONS:
+        reg = Target(i[0], i[1])
+        bondRegionDistributions.append(reg)
+
 
 CategoryAssignFormset = forms.modelformset_factory(models.Split, fields=('category',), extra=0)

@@ -29,6 +29,7 @@
   <div class="box">
     <div class="box-header">
       <h3 class="box-title">Asset Distribution</h3>
+
     </div>
     <div class="box-body">
       <table class="table table-striped">
@@ -41,9 +42,9 @@
           </tr>
          <tr>
             <th>{% trans 'Target' %}</th>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
+             {% for asset in targetAssets %}
+            <td>{{asset.allocation}}</td>
+             {% endfor %}
         </tr>
           <tr>
             <th>{% trans 'Actual' %}</th>
@@ -70,29 +71,23 @@
        <table class="table table-striped">
           <tr>
             <th></th>
-            <th>{% trans '1-3Y' %}</th>
-            <th>{% trans '3-5Y' %}</th>
-            <th>{% trans '5-7Y' %}</th>
-            <th>{% trans '7-10Y' %}</th>
-            <th>{% trans '10-15Y' %}</th>
-            <th>{% trans '15-20Y' %}</th>
-            <th>{% trans '20-30Y' %}</th>
-            <th>{% trans '30+' %}</th>
-            <th>{% trans 'USA' %}</th>
-            <th>{% trans 'EU' %}</th>
+            {% for maturity in targetMaturityBonds.0.MATURITY %}
+                <th>{{ maturity.1}}</th>
+            {% endfor %}
+            {% for region in targetRegionBonds.0.REGIONS %}
+                <th>{{ region.1}}</th>
+            {% endfor %}
+
           </tr>
         <tr>
             <th>{% trans 'Target' %}</th>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
+            {% for asset in targetMaturityBonds %}
+                <td>{{asset.allocation}}</td>
+            {% endfor %}
+            
+             {% for region in targetRegionBonds %}
+                <td>{{ region.allocation}}</td>
+            {% endfor %}
         </tr>
            <tr>
             <th>{% trans 'Actual' %}</th>
@@ -148,18 +143,9 @@
           </tr>
          <tr>
             <th>{% trans 'Target' %}</th>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
+            {% for asset in targetWorld %}
+                <td>{{asset.allocation}}</td>
+            {% endfor %}
         </tr>
           <tr>
             <th>{% trans 'Actual' %}</th>

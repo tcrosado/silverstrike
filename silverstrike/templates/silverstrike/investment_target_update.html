@@ -28,26 +28,8 @@
 </div>
 <div class="box-body">
 
-    <form method="POST" class="form-horizontal">
+    <form method="POST" class="form-horizontal" >
       {% csrf_token %}
-        <div class="col-sm-12">
-            <table class="table table-striped">
-              <tr>
-                <th>{% trans '' %}</th>
-                {% for element in form.regionDistributions %}
-                    <th>{{element.name}}</th>
-                {% endfor %}
-                <th class="col-sm-1">{% trans 'Total' %}</th>
-              </tr>
-              <tr>
-                <th class="col-sm-1">{% trans 'Target (%)' %}</th>
-                {% for element in form.regionDistributions %}
-                  <td><input class="col-sm-12 regionDist" value="0" type="number" step="0.01" min="0.00" required="required" name="R{{element.id}}" onchange="updateRegionSum()"></td>
-                  {% endfor %}
-                <td class="col-sm-1" id="regionSum">0 %</td>
-              </tr>
-            </table>
-        </div>
         <div class="col-sm-4">
             <table class="table table-striped col-6">
               <tr>
@@ -69,7 +51,47 @@
             </table>
         </div>
         <div class="col-sm-12">
-            <button type="submit" class="btn btn-primary col-md-offset-2">{% if object %}{% trans 'Update' %}{% else %}{% trans 'Create' %}{% endif %}</button>
+            <table class="table table-striped">
+              <tr>
+                <th>{% trans '' %}</th>
+                {% for element in form.regionDistributions %}
+                    <th>{{element.name}}</th>
+                {% endfor %}
+                <th class="col-sm-1">{% trans 'Total' %}</th>
+              </tr>
+              <tr>
+                <th class="col-sm-1">{% trans 'Target (%)' %}</th>
+                {% for element in form.regionDistributions %}
+                  <td><input class="col-sm-12 regionDist" value="0" type="number" step="0.01" min="0.00" required="required" name="R{{element.id}}" onchange="updateRegionSum()"></td>
+                  {% endfor %}
+                <td class="col-sm-1" id="regionSum">0 %</td>
+              </tr>
+            </table>
+        </div>
+        <div class="col-sm-12">
+            <table class="table table-striped">
+              <tr>
+                <th>{% trans '' %}</th>
+                {% for element in form.bondMaturityDistributions %}
+                    <th>{{element.name}}</th>
+                {% endfor %}
+                {% for element in form.bondRegionDistributions %}
+                    <th>{{element.name}}</th>
+                {% endfor %}
+              </tr>
+              <tr>
+                <th class="col-sm-1">{% trans 'Target (%)' %}</th>
+                {% for element in form.bondMaturityDistributions %}
+                  <td><input class="col-sm-12" value="0" type="number" step="0.01" min="0.00" required="required" name="BM{{element.id}}"></td>
+                {% endfor %}
+                {% for element in form.bondRegionDistributions %}
+                    <td><input class="col-sm-12" value="0" type="number" step="0.01" min="0.00" required="required" name="BR{{element.id}}"></td>
+                {% endfor %}
+              </tr>
+            </table>
+        </div>
+        <div class="col-sm-12">
+            <button type="submit" onclick="redirect()" class="btn btn-primary col-md-offset-2">{% if object %}{% trans 'Update' %}{% else %}{% trans 'Create' %}{% endif %}</button>
         </div>
     </form>
 </div>
@@ -103,7 +125,6 @@ function sum(inputClass,sumId){
 
     element.innerText = sum + "%";
 }
-
 
 </script>
 {% endblock %}
