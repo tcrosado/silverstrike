@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.http import JsonResponse
 
-from .models import Account, Split
+from .models import Account, Split, SecurityPrice, SecurityDetails
 
 
 @login_required
@@ -78,3 +78,17 @@ def category_spending(request, dstart, dend):
     else:
         categories, spent = [], []
     return JsonResponse({'categories': categories, 'spent': spent})
+
+@login_required
+def get_security_prices(request,security_id,dstart,dend):
+    dstart = datetime.datetime.strptime(dstart, '%Y-%m-%d')
+    dend = datetime.datetime.strptime(dend, '%Y-%m-%d')
+    security = SecurityDetails.objects.get(id=security_id)
+    res = SecurityPrice.objects.filter(ticker=security.ticker,date__range=[dstart,dend])
+    data = []
+    labels = []
+    for security_price in res.iterator():
+        data.append(float(security_price.price))
+        labels.append(security_price.date)
+
+    return JsonResponse({'data': data, 'labels': labels})

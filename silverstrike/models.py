@@ -475,7 +475,7 @@ class InvestmentOperation(models.Model):
     date = models.DateField(default=date.today)
     account = models.ForeignKey(Account, models.CASCADE, related_name='investment_transactions')
     operation_type = models.IntegerField(choices=OPERATION_TYPES, default=BUY)
-    isin = models.CharField(max_length=64)  # FIXME
+    isin = models.CharField(max_length=12)  # FIXME
     category = models.CharField(max_length=64, null=True)  # FIXME
     quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -499,6 +499,65 @@ class InvestmentOperation(models.Model):
 
 class SecurityQuantity(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)
-    isin = models.CharField(max_length=64)
+    isin = models.CharField(max_length=12)
     quantity = models.IntegerField(default=0)
 
+class SecurityDetails(models.Model):
+
+    STOCK = 0
+    REIT = 1
+    BOND = 2
+    SECURITY_TYPES = (
+        (STOCK, 'Stock'),
+        (REIT, 'REIT'),
+        (BOND, 'Bond')
+    )
+
+    isin = models.CharField(max_length=12)
+    name = models.CharField(max_length=64)
+    ticker = models.CharField(max_length=64)
+    exchange = models.CharField(max_length=64)
+    currency = models.CharField(max_length=3)
+    security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK)
+    ter = models.FloatField(default=0.0)
+
+class SecurityDistribution(models.Model):
+    NA = 0
+    LA = 1
+    UK = 2
+    EZ = 3
+    EUEZ = 4
+    EUEM = 5
+    AF = 6
+    ME = 7
+    JP = 8
+    AU = 9
+    AD = 10
+    AE = 11
+
+    REGIONS = (
+        (NA,'North America'),
+        (LA,'Latin America'),
+        (UK,'United Kingdom'),
+        (EZ,'Euro Zone'),
+        (EUEZ,'Europe Ex-EZ'),
+        (EUEM,'Europe Emerging'),
+        (AF,'Africa'),
+        (ME, 'Middle East/Asia'),
+        (JP, 'Japan'),
+        (AU, 'Australasia'),
+        (AD, 'Asia Developed'),
+        (AE, 'Asia Emerging')
+    )
+
+    class Meta:
+        unique_together = (('isin', 'region_id'),)
+
+    isin = models.CharField(max_length=12)
+    allocation = models.FloatField(default=0.0)
+    region_id = models.IntegerField(choices=REGIONS, default=EZ)
+
+class SecurityPrice(models.Model):
+    ticker = models.CharField(max_length=12)
+    date = models.DateField(default=date.today)
+    price = models.DecimalField(max_digits=10, decimal_places=2)

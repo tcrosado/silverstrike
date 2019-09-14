@@ -1,0 +1,115 @@
+{% extends 'silverstrike/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content_header %}
+<h1>{% trans 'Investment Configurations' %}</h1>
+<ol class="breadcrumb">
+  <li><a href="/">{% trans 'Home' %}</a></li>
+  <li class="active">{% trans 'Charts' %}</li>
+</ol>
+{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+        <a class="btn btn-default active" id="btn-apply" href="{% url 'investment_security_list' %}">Security List</a>
+        <a class="btn btn-default" id="btn-apply" href="{% url 'investment_security_pricing' %}">Security History</a>
+        <a class="btn btn-default" id="btn-apply" href="{% url 'investment_target' %}">Target Portfolio</a>
+        <a class="btn btn-primary pull-right" id="btn-apply" href="{% url 'investment_security_new' %}">New Security</a>
+
+        </div>
+      </div>
+    </div>
+</div>
+<div class="row">
+<div class="col-md-12">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Stocks</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans 'Ticker' %}</th>
+            <th>{% trans 'Name' %}</th>
+            <th class="hidden-xs">{% trans 'ISIN' %}</th>
+            <th>{% trans 'TER' %}</th>
+            <th>{% trans 'Exchange' %}</th>
+            <th>{% trans 'Currency' %}</th>
+          </tr>
+        {% for security in stocks %}
+        <tr>
+          <td>{{ security.ticker }}</td>
+            <td><a href="{% url 'investment_security_details' security.id %}">{{ security.name }}</a></td>
+          <td>{{ security.isin }}</td>
+          <td>{{ security.ter }}</td>
+          <td>{{ security.exchange }}</td>
+          <td>{{ security.currency }}</td>
+        </tr>
+        {% endfor %}
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-12">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">REIT</h3>
+    </div>
+    <div class="box-body">
+       <table class="table table-striped">
+          <tr>
+            <th>{% trans 'Ticker' %}</th>
+            <th>{% trans 'Name' %}</th>
+            <th class="hidden-xs">{% trans 'ISIN' %}</th>
+              <th>{% trans 'TER' %}</th>
+            <th>{% trans 'Exchange' %}</th>
+            <th>{% trans 'Currency' %}</th>
+          </tr>
+        {% for security in reit %}
+        <tr>
+          <td>{{ security.ticker }}</td>
+          <td><a href="{% url 'investment_security_details' security.id %}">{{ security.name }}</a></td>
+          <td>{{ security.isin }}</td>
+          <td>{{ security.ter }}</td>
+          <td>{{ security.exchange }}</td>
+          <td>{{ security.currency }}</td>
+        </tr>
+        {% endfor %}
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-12">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Bonds</h3>
+    </div>
+    <div class="box-body">
+       <table class="table table-striped">
+          <tr>
+            <th>{% trans 'Ticker' %}</th>
+            <th>{% trans 'Name' %}</th>
+            <th class="hidden-xs">{% trans 'ISIN' %}</th>
+            <th>{% trans 'Exchange' %}</th>
+            <th>{% trans 'Currency' %}</th>
+          </tr>
+        {% for security in securities %}
+        <tr>
+          <td>{{ transaction.ticker }}</td>
+          <td><a href="{% url 'investment_security_details' security.id %}">{{ transaction.name }}</a></td>
+          <td>{{ transaction.isin }}</td>
+          <td>{{ transaction.exchange }}</td>
+          <td>{{ transaction.currency }}</td>
+        </tr>
+        {% endfor %}
+       </table>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}
