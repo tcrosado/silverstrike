@@ -77,8 +77,19 @@ urlpatterns = [
     path('investments/calculator/',
          investment_views.InvestmentCalculatorView.as_view(), name='investment-calculator'),
     path('investments/config/',
-         investment_views.InvestmentConfigView.as_view(), name='investment-config'),
-
+         investment_views.InvestmentConfigView.as_view(), name='investment_security_list'),
+    path('investments/config/prices',
+         investment_views.InvestmentConfigPriceView.as_view(), name='investment_security_pricing'),
+    path('investments/config/target',
+         investment_views.InvestmentConfigTargetView.as_view(), name='investment_target'),
+    path('investments/security/<int:pk>/update',
+         investment_views.SecurityDetailsUpdate.as_view(), name='investment_security_update'),
+    path('investments/security/create',
+         investment_views.SecurityDetailsCreate.as_view(), name='investment_security_new'),
+    path('investments/security/<int:pk>/distribution/create',
+         investment_views.SecurityDistributionCreate.as_view(), name='investment_security_distribution'),
+    path('investments/security/<int:pk>/',
+         investment_views.SecurityDetailsInformation.as_view(), name='investment_security_details'),
     path('recurrences/',
          recurrence_views.RecurringTransactionIndex.as_view(), name='recurrences'),
     path('recurrences/create/',
@@ -124,7 +135,8 @@ urlpatterns = [
     path('reports/', report_views.ReportView.as_view(), name='reports'),
     path('reports/income-expense', report_views.IncomeExpenseReport.as_view(),
          name='income_expense_report'),
-
+    path('api/investment/security/<int:security_id>/price/<dstart>/<dend>/',
+         api.get_security_prices, name='api_security_prices'),
     path('api/accounts/<account_type>/', api.get_accounts, name='api_accounts'),
     path('api/balance/<dstart>/<dend>/', api.get_balances, name='api_balance'),
     path('api/account/<int:account_id>/balance/<dstart>/<dend>/',
@@ -136,8 +148,6 @@ urlpatterns = [
     path('api/update_current_recurrences/',
          recurrence_views.ReccurrenceSetNextOccurence.as_view(),
          name='update_current_recurrences'),
-
-
     path('manifest.json', TemplateView.as_view(template_name='silverstrike/manifest.json'),
          name='manifest'),
 

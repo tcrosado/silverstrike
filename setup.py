@@ -35,6 +35,7 @@ setup(
         'django-allauth',
         'python-dateutil',
         'django-cors-headers',
+        'yfinance'
     ],
     extras_require={
         'OFX Importing': ['ofxparse'],
@@ -52,6 +53,6 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     keywords='finance django money money-manager',
-    python_requires='>=3.5',
+    python_requires='>=3.6',
 )
 
