@@ -40,7 +40,11 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         securityPrices = dict()
         securityTotals = dict()
         securityWeights = dict()
-
+        stockWeight = 0
+        reitWeight = 0
+        bondWeight = 0
+        totalMoneyRegion = dict()
+        stockWeightRegions = dict()
         def transform_to_security_overview(list):
             return [
                 InvestmentView.SecurityOverview(
@@ -80,14 +84,53 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             securityPrices[isin] = security.price
             securityTotals[isin] = security.price * securityQuant[isin]
 
+        # Individual weights and total Value
         context['totalValue'] = sum(securityTotals[key] for key in securityTotals.keys())
         for isin in securityTotals.keys():
             securityWeights[isin] = float(securityTotals[isin] / context['totalValue']) * 100
+
+        # weight asset distribution
+        for security in stocks:
+            stockWeight = stockWeight + securityWeights[security.isin]
+        for security in reit:
+            reitWeight = reitWeight + securityWeights[security.isin]
+        for security in bonds:
+            bondWeight = bondWeight + securityWeights[security.isin]
+        # weight world distribution
+        securityDistribution = SecurityDistribution.objects.filter(isin__in=securityQuant.keys())
+
+        for dist in securityDistribution:
+
+            totalRegion = totalMoneyRegion.get(dist.region_id)
+            total = float(securityTotals[dist.isin]) * float(dist.allocation / 100)
+            if totalRegion == None:
+                totalMoneyRegion[dist.region_id] = total
+            else:
+                totalMoneyRegion[dist.region_id] = totalRegion + total
+
+        for dist in securityDistribution:
+            totalRegion = stockWeightRegions.get(dist.region_id)
+            if totalMoneyRegion[dist.region_id] == 0:
+                allocation = 0
+            else:
+                allocation = (float(securityTotals[dist.isin]) * float(dist.allocation) / (float(stockWeight) * float(context['totalValue']))) * 100
+            print(float(stockWeight / 100) * float(context['totalValue']))
+            if totalRegion == None:
+                stockWeightRegions[dist.region_id] = allocation
+            else:
+                stockWeightRegions[dist.region_id] = totalRegion + allocation
+
+        # weight bond distribution
 
         context['securities'] = {
             'Stocks': transform_to_security_overview(stocks),
             'REIT': transform_to_security_overview(reit),
             'Bonds': transform_to_security_overview(bonds)}
+        context['stocksWeight'] = stockWeight
+        context['REITWeight'] = reitWeight
+        context['bondsWeight'] = bondWeight
+        context['worldDistribution'] = stockWeightRegions
+        context['REGIONS'] = securityDistribution[0].REGIONS
         return context
 
 
