@@ -143,10 +143,11 @@
     </div>
   </div>
 </div>
+{% for securityType,securityList in securities.items %}
 <div class="col-md-12">
   <div class="box">
     <div class="box-header">
-      <h3 class="box-title">Stocks</h3>
+      <h3 class="box-title">{{securityType}}</h3>
     </div>
     <div class="box-body">
       <table class="table table-striped">
@@ -154,94 +155,28 @@
             <th>{% trans 'Weight' %}</th>
             <th>{% trans 'Ticker' %}</th>
             <th>{% trans 'Quantity' %}</th>
-              <th>{% trans 'Current Price' %}</th>
+            <th>{% trans 'Current Price' %}</th>
             <th>{% trans 'Average Price' %}</th>
             <th>{% trans 'Total Price' %}</th>
             <th>{% trans 'Total Return' %}</th>
             <th>{% trans 'YTD Return' %}</th>
           </tr>
-        {% for security in stocks %}
+        {% for security in securityList %}
         <tr>
-          <td>%FIXME%</td>
-          <td>{{ security.1.ticker }}</td>
-          <td>{{ security.0 }}</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-          <td>0 €</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
+          <td>{{ security.weight }}</td>
+          <td>{{ security.ticker }}</td>
+          <td>{{ security.quantity }}</td>
+          <td>{{ security.currentPrice }}</td>
+          <td>{{ security.averagePrice }}</td>
+          <td>{{ security.totalPrice }}</td>
+          <td>{{ security.totalReturn }}</td>
+          <td>{{ security.ytdReturn }}</td>
         </tr>
         {% endfor %}
        </table>
     </div>
   </div>
 </div>
-<div class="col-md-12">
-  <div class="box">
-    <div class="box-header">
-      <h3 class="box-title">REIT</h3>
-    </div>
-    <div class="box-body">
-      <table class="table table-striped">
-          <tr>
-            <th>{% trans 'Weight' %}</th>
-            <th>{% trans 'Ticker' %}</th>
-            <th>{% trans 'Quantity' %}</th>
-              <th>{% trans 'Current Price' %}</th>
-            <th>{% trans 'Average Price' %}</th>
-            <th>{% trans 'Total Price' %}</th>
-            <th>{% trans 'Total Return' %}</th>
-            <th>{% trans 'YTD Return' %}</th>
-          </tr>
-        {% for security in reit %}
-        <tr>
-          <td>%FIXME%</td>
-          <td>{{ security.1.ticker }}</td>
-          <td>{{ security.0 }}</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-        </tr>
-        {% endfor %}
-       </table>
-    </div>
-  </div>
-</div>
-<div class="col-md-12">
-  <div class="box">
-    <div class="box-header">
-      <h3 class="box-title">Bonds</h3>
-    </div>
-    <div class="box-body">
-      <table class="table table-striped">
-          <tr>
-            <th>{% trans 'Weight' %}</th>
-            <th>{% trans 'Ticker' %}</th>
-            <th>{% trans 'Quantity' %}</th>
-              <th>{% trans 'Current Price' %}</th>
-            <th>{% trans 'Average Price' %}</th>
-            <th>{% trans 'Total Price' %}</th>
-            <th>{% trans 'Total Return' %}</th>
-            <th>{% trans 'YTD Return' %}</th>
-          </tr>
-        {% for security in bonds %}
-        <tr>
-          <td>%FIXME%</td>
-          <td>{{ security.1.ticker }}</td>
-          <td>{{ security.0 }}</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-          <td>%FIXME%</td>
-        </tr>
-        {% endfor %}
-       </table>
-    </div>
-  </div>
-</div>
-</div>
+{% endfor %}
 
 {% endblock %}
