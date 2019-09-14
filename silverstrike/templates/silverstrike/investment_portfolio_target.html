@@ -43,7 +43,7 @@
          <tr>
             <th>{% trans 'Target' %}</th>
              {% for asset in targetAssets %}
-            <td>{{asset.allocation}}</td>
+            <td>{{asset.allocation}} %</td>
              {% endfor %}
         </tr>
           <tr>
@@ -82,11 +82,11 @@
         <tr>
             <th>{% trans 'Target' %}</th>
             {% for asset in targetMaturityBonds %}
-                <td>{{asset.allocation}}</td>
+                <td>{{asset.allocation}} %</td>
             {% endfor %}
             
              {% for region in targetRegionBonds %}
-                <td>{{ region.allocation}}</td>
+                <td>{{ region.allocation}} %</td>
             {% endfor %}
         </tr>
            <tr>
@@ -128,23 +128,15 @@
       <table class="table table-striped">
           <tr>
             <th>{% trans '' %}</th>
-            <th>{% trans 'North Am' %}</th>
-            <th>{% trans 'Latin Am' %}</th>
-              <th>{% trans 'UK' %}</th>
-            <th>{% trans 'Euro' %}</th>
-            <th>{% trans 'Euro ExEZ' %}</th>
-            <th>{% trans 'Euro Em' %}</th>
-            <th>{% trans 'Africa' %}</th>
-            <th>{% trans 'ME' %}</th>
-            <th>{% trans 'JP' %}</th>
-            <th>{% trans 'Australasia' %}</th>
-            <th>{% trans 'Asia Dev' %}</th>
-            <th>{% trans 'Asia Em' %}</th>
+            {% for region in regionList %}
+              <th>{{ region.1 }}</th>
+
+            {% endfor %}
           </tr>
          <tr>
             <th>{% trans 'Target' %}</th>
             {% for asset in targetWorld %}
-                <td>{{asset.allocation}}</td>
+                <td>{{asset.allocation}} %</td>
             {% endfor %}
         </tr>
           <tr>

@@ -94,6 +94,7 @@ class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_portfolio_target'
         context['targetAssets'] = SecurityTypeTarget.objects.all()
+        context['regionList'] = SecurityDistribution.REGIONS
         context['targetWorld'] = SecurityRegionTarget.objects.all()
         context['targetMaturityBonds'] = SecurityBondMaturityTarget.objects.all()
         context['targetRegionBonds'] = SecurityBondRegionTarget.objects.all()
