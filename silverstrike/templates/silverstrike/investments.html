@@ -63,33 +63,18 @@
       <table class="table table-striped">
           <tr>
             <th>{% trans '' %}</th>
-            <th>{% trans 'North Am' %}</th>
-            <th>{% trans 'Latin Am' %}</th>
-              <th>{% trans 'UK' %}</th>
-            <th>{% trans 'Euro' %}</th>
-            <th>{% trans 'Euro ExEZ' %}</th>
-            <th>{% trans 'Euro Em' %}</th>
-            <th>{% trans 'Africa' %}</th>
-            <th>{% trans 'ME' %}</th>
-            <th>{% trans 'JP' %}</th>
-            <th>{% trans 'Australasia' %}</th>
-            <th>{% trans 'Asia Dev' %}</th>
-            <th>{% trans 'Asia Em' %}</th>
+            {% for element in REGIONS %}
+              <th>{% trans element.1 %}</th>
+
+            {% endfor %}
+
           </tr>
          <tr>
             <th>{% trans 'Stocks' %}</th>
-            <td>0 (-20%)</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
+            {% for element in worldDistribution.items %}
+            <td>{{ element.1 }}%</td>
+            {% endfor %}
+
         </tr>
        </table>
       <br>
@@ -131,13 +116,13 @@
     <div class="box-body">
       <table class="table table-striped">
         <tr>
-          <th>{% trans 'Stocks' %}</th><td>74%</td><td>(4%)</td>
+          <th>{% trans 'Stocks' %}</th><td>{{ stocksWeight }} %</td><td>(4%)</td>
         </tr>
         <tr>
-          <th>{% trans 'REIT' %}</th><td>0</td><td>0</td>
+          <th>{% trans 'REIT' %}</th><td>{{ REITWeight }} %</td><td>0</td>
         </tr>
         <tr>
-          <th>{% trans 'Bonds' %}</th><td>0</td><td>0</td>
+          <th>{% trans 'Bonds' %}</th><td>{{ bondsWeight }} %</td><td>0</td>
         </tr>
         </table>
     </div>
@@ -166,9 +151,9 @@
           <td>{{ security.weight }}</td>
           <td>{{ security.ticker }}</td>
           <td>{{ security.quantity }}</td>
-          <td>{{ security.currentPrice }}</td>
-          <td>{{ security.averagePrice }}</td>
-          <td>{{ security.totalPrice }}</td>
+          <td>{{ security.currentPrice }} €</td>
+          <td>{{ security.averagePrice }} €</td>
+          <td>{{ security.totalPrice }} €</td>
           <td>{{ security.totalReturn }}</td>
           <td>{{ security.ytdReturn }}</td>
         </tr>
