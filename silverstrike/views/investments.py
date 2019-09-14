@@ -38,16 +38,18 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         quantities = SecurityQuantity.objects.all()
         securityQuant = dict()
         securityPrices = dict()
+        securityTotals = dict()
+        securityWeights = dict()
 
         def transform_to_security_overview(list):
             return [
                 InvestmentView.SecurityOverview(
-                    weight=0,
+                    weight=securityWeights[security.isin],
                     ticker=security.ticker,
                     quantity=securityQuant[security.isin],
                     currentPrice=securityPrices[security.isin],
                     averagePrice=0,
-                    totalPrice=securityQuant[security.isin] * securityPrices[security.isin],
+                    totalPrice=securityTotals[security.isin],
                     totalReturn=0,
                     ytdReturn=0) for security in list]
 
@@ -76,7 +78,11 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         for security in prices:
             isin = tickersMap[security.ticker]
             securityPrices[isin] = security.price
+            securityTotals[isin] = security.price * securityQuant[isin]
 
+        context['totalValue'] = sum(securityTotals[key] for key in securityTotals.keys())
+        for isin in securityTotals.keys():
+            securityWeights[isin] = float(securityTotals[isin] / context['totalValue']) * 100
 
         context['securities'] = {
             'Stocks': transform_to_security_overview(stocks),
