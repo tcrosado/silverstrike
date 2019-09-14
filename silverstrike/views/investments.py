@@ -11,8 +11,9 @@ from django.views import generic
 
 from silverstrike.lib import update_security_price
 from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
-    SecurityPrice
-from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm
+    SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget
+from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
+    InvestmentTargetUpdateForm
 
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -88,12 +89,78 @@ class InvestmentConfigPriceView(LoginRequiredMixin, generic.TemplateView):
         return context
 
 class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
-    template_name = 'silverstrike/investment_config.html'
-    model = SecurityPrice
+    template_name = 'silverstrike/investment_portfolio_target.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu'] = 'investment_security_pricing'
+        context['menu'] = 'investment_portfolio_target'
+        context['targetAssets'] = SecurityTypeTarget.objects.all()
+        context['regionList'] = SecurityDistribution.REGIONS
+        context['targetWorld'] = SecurityRegionTarget.objects.all()
+        context['targetMaturityBonds'] = SecurityBondMaturityTarget.objects.all()
+        context['targetRegionBonds'] = SecurityBondRegionTarget.objects.all()
         return context
+
+class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
+    template_name = 'silverstrike/investment_target_update.html'
+    form_class = InvestmentTargetUpdateForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = 'investment_target_update' #FIXME add to context current
+        return context
+
+    def get_success_url(self):
+        return reverse('investment_portfolio_target')
+
+    def post(self, request, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        request_data = dict(request.POST.lists())
+
+        for key in request_data.keys():
+            print(key)
+
+            if key == 'csrfmiddlewaretoken': #FIXME
+                continue
+            elif key.startswith('R'):
+                region_id = int(key.split('R')[1])
+                allocation = float(request_data[key][0])
+
+                try:
+                    target_asset = SecurityRegionTarget.objects.get(region_id=region_id)
+                    target_asset.allocation = allocation
+                    target_asset.save()
+                except SecurityRegionTarget.DoesNotExist:
+                    SecurityRegionTarget.objects.create(region_id=region_id, allocation=allocation)
+            elif key.startswith('A'):
+                security_type = int(key.split('A')[1])
+                allocation = float(request_data[key][0])
+                try:
+                    target_asset = SecurityTypeTarget.objects.get(security_type=security_type)
+                    target_asset.allocation = allocation
+                    target_asset.save()
+                except SecurityTypeTarget.DoesNotExist:
+                    SecurityTypeTarget.objects.create(security_type=security_type,allocation=allocation)
+            elif key.startswith('BM'):
+                maturity_id = int(key.split('BM')[1])
+                allocation = float(request_data[key][0])
+                try:
+                    target_asset = SecurityBondMaturityTarget.objects.get(maturity_id=maturity_id)
+                    target_asset.allocation = allocation
+                    target_asset.save()
+                except SecurityBondMaturityTarget.DoesNotExist:
+                    SecurityBondMaturityTarget.objects.create(maturity_id=maturity_id, allocation=allocation)
+            elif key.startswith('BR'):
+                region_id = int(key.split('BR')[1])
+                allocation = float(request_data[key][0])
+                try:
+                    target_asset = SecurityBondRegionTarget.objects.get(region_id=region_id)
+                    target_asset.allocation = allocation
+                    target_asset.save()
+                except SecurityBondRegionTarget.DoesNotExist:
+                    SecurityBondRegionTarget.objects.create(region_id=region_id, allocation=allocation)
+
+        return HttpResponseRedirect(reverse('investment_portfolio_target'))
+
 
 class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME
     model = SecurityDetails
@@ -131,7 +198,7 @@ class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # 
 
     def get_context_data(self, **kwargs):
         context = super(SecurityDistributionCreate, self).get_context_data(**kwargs)
-        context['menu'] = 'transactions'
+        context['menu'] = 'transactions' #FIXME add to context current
         return context
 
     def post(self, request, *args, **kwargs):
@@ -169,7 +236,10 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         except SecurityQuantity.DoesNotExist:
             assets = 0
         context['currentAssets'] = assets
-        context['totalPrice'] = last_price.price * assets
+        if last_price == None:
+            context['totalPrice'] = 0
+        else:
+            context['totalPrice'] = last_price.price * assets
         context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
         price_distribution = []
         for region in context['securityDistribution']:
@@ -178,6 +248,7 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
 
         return context
 
+    #FIXME switch to api
     def post(self,request, *args, **kwargs):
         context = super().get_context_data(**kwargs)
         security_id = context['pk']

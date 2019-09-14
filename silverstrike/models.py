@@ -561,3 +561,47 @@ class SecurityPrice(models.Model):
     ticker = models.CharField(max_length=12)
     date = models.DateField(default=date.today)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+class SecurityTypeTarget(models.Model):
+    security_type = models.IntegerField(choices=SecurityDetails.SECURITY_TYPES, default=SecurityDetails.STOCK)
+    allocation = models.FloatField(default=0.0)
+
+class SecurityRegionTarget(models.Model):
+    region_id = models.IntegerField(choices=SecurityDistribution.REGIONS, default=SecurityDistribution.EZ)
+    allocation = models.FloatField(default=0.0)
+
+class SecurityBondMaturityTarget(models.Model):
+    F1T3 = 0
+    F3T5 = 1
+    F5T7 = 2
+    F7T10 = 3
+    F10T15 = 4
+    F15T20 = 5
+    F20T30 = 6
+    F30 = 7
+
+    MATURITY = (
+        (F1T3, '1-3Y'),
+        (F3T5, '3-5Y'),
+        (F5T7, '5-7Y'),
+        (F7T10, '7-10Y'),
+        (F10T15, '10-15Y'),
+        (F15T20, '15-20Y'),
+        (F20T30, '20-30Y'),
+        (F30, '30+'),
+    )
+    maturity_id = models.IntegerField(choices=MATURITY, default=F1T3)
+    allocation = models.FloatField(default=0.0)
+
+class SecurityBondRegionTarget(models.Model):
+    USA = 0
+    EU = 1
+
+    REGIONS = (
+        (USA, 'United States'),
+        (EU, 'Europe')
+    )
+
+    region_id = models.IntegerField(choices=REGIONS, default=EU)
+    allocation = models.FloatField(default=0.0)
+

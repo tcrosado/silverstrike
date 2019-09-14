@@ -1,0 +1,178 @@
+{% extends 'silverstrike/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content_header %}
+<h1>{% trans 'Investment Configurations' %}</h1>
+<ol class="breadcrumb">
+  <li><a href="/">{% trans 'Home' %}</a></li>
+  <li class="active">{% trans 'Charts' %}</li>
+</ol>
+{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-body">
+        <a class="btn btn-default active" id="btn-apply" href="{% url 'investment_portfolio_target' %}">Target Portfolio</a>
+        <a class="btn btn-default" id="btn-apply" href="{% url 'investment_security_list' %}">Security List</a>
+        <a class="btn btn-default" id="btn-apply" href="{% url 'investment_security_pricing' %}">Security History</a>
+        <a class="btn btn-primary pull-right" id="btn-apply" href="{% url 'investment_target_update' %}">Update Target</a>
+
+        </div>
+      </div>
+    </div>
+</div>
+<div class="row">
+<div class="col-md-4">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Asset Distribution</h3>
+
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans '' %}</th>
+            <th>{% trans 'Stocks' %}</th>
+            <th>{% trans 'Bonds' %}</th>
+              <th>{% trans 'REIT' %}</th>
+
+          </tr>
+         <tr>
+            <th>{% trans 'Target' %}</th>
+             {% for asset in targetAssets %}
+            <td>{{asset.allocation}} %</td>
+             {% endfor %}
+        </tr>
+          <tr>
+            <th>{% trans 'Actual' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+          <tr>
+            <th>{% trans 'Delta' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-8">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Bond Distribution</h3>
+    </div>
+    <div class="box-body">
+       <table class="table table-striped">
+          <tr>
+            <th></th>
+            {% for maturity in targetMaturityBonds.0.MATURITY %}
+                <th>{{ maturity.1}}</th>
+            {% endfor %}
+            {% for region in targetRegionBonds.0.REGIONS %}
+                <th>{{ region.1}}</th>
+            {% endfor %}
+
+          </tr>
+        <tr>
+            <th>{% trans 'Target' %}</th>
+            {% for asset in targetMaturityBonds %}
+                <td>{{asset.allocation}} %</td>
+            {% endfor %}
+            
+             {% for region in targetRegionBonds %}
+                <td>{{ region.allocation}} %</td>
+            {% endfor %}
+        </tr>
+           <tr>
+            <th>{% trans 'Actual' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+           <tr>
+            <th>{% trans 'Delta' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+<div class="col-md-12">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Stock Distribution</h3>
+    </div>
+    <div class="box-body">
+      <table class="table table-striped">
+          <tr>
+            <th>{% trans '' %}</th>
+            {% for region in regionList %}
+              <th>{{ region.1 }}</th>
+
+            {% endfor %}
+          </tr>
+         <tr>
+            <th>{% trans 'Target' %}</th>
+            {% for asset in targetWorld %}
+                <td>{{asset.allocation}} %</td>
+            {% endfor %}
+        </tr>
+          <tr>
+            <th>{% trans 'Actual' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+          <tr>
+            <th>{% trans 'Delta' %}</th>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        </tr>
+       </table>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}
