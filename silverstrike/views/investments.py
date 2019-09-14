@@ -38,6 +38,19 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         quantities = SecurityQuantity.objects.all()
         securityQuant = dict()
         securityPrices = dict()
+
+        def transform_to_security_overview(list):
+            return [
+                InvestmentView.SecurityOverview(
+                    weight=0,
+                    ticker=security.ticker,
+                    quantity=securityQuant[security.isin],
+                    currentPrice=securityPrices[security.isin],
+                    averagePrice=0,
+                    totalPrice=securityQuant[security.isin] * securityPrices[security.isin],
+                    totalReturn=0,
+                    ytdReturn=0) for security in list]
+
         for security in quantities:
             securityQuant[security.isin] = security.quantity
 
@@ -66,36 +79,9 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
 
         context['securities'] = {
-            'Stocks': [
-                InvestmentView.SecurityOverview(
-                    weight= 0,
-                    ticker= security.ticker,
-                    quantity= securityQuant[security.isin],
-                    currentPrice= securityPrices[security.isin],
-                    averagePrice= 0,
-                    totalPrice= 0,
-                    totalReturn= 0,
-                    ytdReturn= 0) for security in stocks],
-            'REIT': [
-                InvestmentView.SecurityOverview(
-                    weight=0,
-                    ticker=security.ticker,
-                    quantity=securityQuant[security.isin],
-                    currentPrice=securityPrices[security.isin],
-                    averagePrice=0,
-                    totalPrice=0,
-                    totalReturn=0,
-                    ytdReturn=0) for security in reit],
-            'Bonds': [
-                InvestmentView.SecurityOverview(
-                    weight=0,
-                    ticker=security.ticker,
-                    quantity=securityQuant[security.isin],
-                    currentPrice=securityPrices[security.isin],
-                    averagePrice=0,
-                    totalPrice=0,
-                    totalReturn=0,
-                    ytdReturn=0) for security in bonds]}
+            'Stocks': transform_to_security_overview(stocks),
+            'REIT': transform_to_security_overview(reit),
+            'Bonds': transform_to_security_overview(bonds)}
         return context
 
 
