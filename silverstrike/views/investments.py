@@ -115,7 +115,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
                 allocation = 0
             else:
                 allocation = (float(securityTotals[dist.isin]) * float(dist.allocation) / (float(stockWeight) * float(context['totalValue']))) * 100
-            print(float(stockWeight / 100) * float(context['totalValue']))
+
             if totalRegion == None:
                 stockWeightRegions[dist.region_id] = allocation
             else:
@@ -216,7 +216,6 @@ class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
         request_data = dict(request.POST.lists())
 
         for key in request_data.keys():
-            print(key)
 
             if key == 'csrfmiddlewaretoken': #FIXME
                 continue
@@ -282,9 +281,6 @@ class SecurityDetailsUpdate(LoginRequiredMixin, generic.edit.UpdateView):  # FIX
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if 'pk' in context:
-            print(context['pk'])
-        print(context)
         context['menu'] = 'transactions'
         return context
 
