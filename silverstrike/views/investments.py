@@ -39,6 +39,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         context['menu'] = 'investment_overview'
         quantities = SecurityQuantity.objects.all()
         securityAveragePrices = dict()
+        securityTotalReturn = dict()
         securityQuant = dict()
         securityPrices = dict()
         securityTotals = dict()
@@ -57,7 +58,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
                     currentPrice=securityPrices[security.isin],
                     averagePrice=securityAveragePrices[isin],
                     totalPrice=securityTotals[security.isin],
-                    totalReturn=0,
+                    totalReturn=securityTotalReturn[security.isin],
                     ytdReturn=0) for security in list]
 
         for security in quantities:
@@ -114,7 +115,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
         for isin in quantityOwned.keys():
             securityAveragePrices[isin] = valuePayed[isin] / quantityOwned[isin]
-
+            securityTotalReturn[isin] = (1 - (valuePayed[isin] / (securityPrices[isin]*quantityOwned[isin]))) * 100
 
         # Individual weights and total Value
         context['totalValue'] = sum(securityTotals[key] for key in securityTotals.keys())
@@ -164,6 +165,10 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         context['bondsWeight'] = bondWeight
         context['worldDistribution'] = stockWeightRegions
         context['REGIONS'] = securityDistribution[0].REGIONS
+        context['totalInvested'] = sum(valuePayed.values())
+        context['totalDividends'] = 0 # TODO
+        context['totalValuePercent'] = (context['totalValue'] / context['totalInvested']) * 100
+        context['totalReturn'] = (context['totalValue'] + context['totalDividends']) - context['totalInvested']
         return context
 
 
