@@ -13,7 +13,8 @@ from django.views import generic
 
 from silverstrike.lib import update_security_price
 from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
-    SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget
+    SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget, \
+    SecuritySale
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm
 
@@ -37,6 +38,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_overview'
         quantities = SecurityQuantity.objects.all()
+        securityAveragePrices = dict()
         securityQuant = dict()
         securityPrices = dict()
         securityTotals = dict()
@@ -53,7 +55,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
                     ticker=security.ticker,
                     quantity=securityQuant[security.isin],
                     currentPrice=securityPrices[security.isin],
-                    averagePrice=0,
+                    averagePrice=securityAveragePrices[isin],
                     totalPrice=securityTotals[security.isin],
                     totalReturn=0,
                     ytdReturn=0) for security in list]
@@ -65,6 +67,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         reit = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT,isin__in=securityQuant.keys())
         bonds = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND,isin__in=securityQuant.keys())
 
+        # Map ticker to isin
         tickersMap = dict()
         for security in stocks:
             tickersMap[security.ticker] = security.isin
@@ -73,6 +76,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         for security in bonds:
             tickersMap[security.ticker] = security.isin
 
+        # get latest prices
         latestDates = SecurityPrice.objects.filter(ticker__in=tickersMap.keys()).values('ticker').annotate(max_date=Max('date')).order_by()
 
         prices = []
@@ -84,6 +88,33 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             isin = tickersMap[security.ticker]
             securityPrices[isin] = security.price
             securityTotals[isin] = security.price * securityQuant[isin]
+
+        # Calculate average price
+
+        #sum(nr stock * price) / nr stocks
+        sellTracked = SecuritySale.objects.all()
+        quantityOwned = dict()
+        valuePayed = dict()
+        ids = []
+        for sale in sellTracked:
+            if sale.original_operation_id.quantity != sale.quantity:
+                isin = sale.original_operation_id.isin
+                price = sale.original_operation_id.price
+                owned_quantity = sale.original_operation_id.quantity - sale.quantity
+                quantityOwned[isin] = quantityOwned.get(isin, 0) + owned_quantity
+                valuePayed[isin] = valuePayed.get(isin, 0) + (owned_quantity * price)
+
+            ids.append(sale.original_operation_id.id)
+
+        operations = InvestmentOperation.objects.exclude(id__in=ids).filter(operation_type=InvestmentOperation.BUY)
+
+        for operation in operations:
+            quantityOwned[operation.isin] = quantityOwned.get(operation.isin, 0) + operation.quantity
+            valuePayed[operation.isin] = valuePayed.get(operation.isin, 0) + (operation.price * operation.quantity)
+
+        for isin in quantityOwned.keys():
+            securityAveragePrices[isin] = valuePayed[isin] / quantityOwned[isin]
+
 
         # Individual weights and total Value
         context['totalValue'] = sum(securityTotals[key] for key in securityTotals.keys())
@@ -121,7 +152,8 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             else:
                 stockWeightRegions[dist.region_id] = totalRegion + allocation
 
-        # weight bond distribution
+        #TODO weight bond distribution
+
 
         context['securities'] = {
             'Stocks': transform_to_security_overview(stocks),
