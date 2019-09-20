@@ -10,7 +10,13 @@
 </ol>
 {% endblock %}
 {% block content %}
-
+<div id="loader-body">
+    <div class="loader loader-content" id="loader"></div>
+    <div class="loader-text loader-content">
+        Updating prices ...
+    </div>
+</div>
+<div id="main">
 <div class="row">
 <div class="col-md-6">
   <div class="box">
@@ -47,7 +53,7 @@
         </table>
       </div>
     <div class="box-footer">
-      <form method="post">
+      <form method="post" onsubmit="blurToggle()" on>
         {% csrf_token %}
         <button type="submit" name="update_price" class="btn btn-default">{% trans 'Update Prices' %}</button>
       </form>
@@ -153,10 +159,79 @@
 
 </div>
 </div>
+</div>
+
+<style>
+.loader {
+  border: 10px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 10px solid #3498db;
+  width: 60px;
+  height: 60px;
+  -webkit-animation: spin 1.5s linear infinite; /* Safari */
+  animation: spin 1.5s linear infinite;
+
+}
+.loader-content {
+  position:absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
+  margin: auto;
+}
+
+.loader-text {
+    top: 150px;
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.blurredElement {
+     /* Any browser which supports CSS3 */
+    filter: blur(7px);
+
+    /* Firefox version 34 and earlier */
+    filter: url("blur.svg#gaussian_blur");
+
+    /* Webkit in Chrome 52, Safari 9, Opera 39, and earlier */
+    -webkit-filter: blur(7px);
+}
+
+#loader-body {
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
+}
+
+</style>
 {% endblock %}
 {% block scripts %}
 <script src="{% static 'vendor/js/Chart.bundle.min.js' %}"></script>
 <script type="text/javascript">
+  jQuery(document).ready(function($){
+    $(document).on( 'frmFormComplete', function( event, form, response ) {
+      blurToggle();
+    });
+  });
+
   $.getJSON("{% url 'api_security_prices' securityDetails.id dates.0 dates.1 %}", {}, function(res, status) {
   var ytd_return = document.getElementById("ytd_return");
   ret = ((res.data[res.data.length - 1] - res.data[0]) / res.data[0]).toFixed(4)*100;
@@ -194,6 +269,18 @@
       }
     });
   });
+
+  function blurToggle(){
+    var element = $("#main");
+    var loader = $("#loader-body");
+    if(element.hasClass("blurredElement")){
+        element.removeClass("blurredElement");
+        loader.hide();
+    } else {
+        element.addClass("blurredElement");
+        loader.show();
+    }
+ }
 </script>
 
 {% endblock %}

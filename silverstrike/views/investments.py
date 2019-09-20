@@ -13,7 +13,8 @@ from django.views import generic
 
 from silverstrike.lib import update_security_price
 from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
-    SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget
+    SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget, \
+    SecuritySale
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm
 
@@ -37,6 +38,8 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_overview'
         quantities = SecurityQuantity.objects.all()
+        securityAveragePrices = dict()
+        securityTotalReturn = dict()
         securityQuant = dict()
         securityPrices = dict()
         securityTotals = dict()
@@ -53,9 +56,9 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
                     ticker=security.ticker,
                     quantity=securityQuant[security.isin],
                     currentPrice=securityPrices[security.isin],
-                    averagePrice=0,
+                    averagePrice=securityAveragePrices[isin],
                     totalPrice=securityTotals[security.isin],
-                    totalReturn=0,
+                    totalReturn=securityTotalReturn[security.isin],
                     ytdReturn=0) for security in list]
 
         for security in quantities:
@@ -65,6 +68,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         reit = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT,isin__in=securityQuant.keys())
         bonds = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND,isin__in=securityQuant.keys())
 
+        # Map ticker to isin
         tickersMap = dict()
         for security in stocks:
             tickersMap[security.ticker] = security.isin
@@ -73,6 +77,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         for security in bonds:
             tickersMap[security.ticker] = security.isin
 
+        # get latest prices
         latestDates = SecurityPrice.objects.filter(ticker__in=tickersMap.keys()).values('ticker').annotate(max_date=Max('date')).order_by()
 
         prices = []
@@ -84,6 +89,33 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             isin = tickersMap[security.ticker]
             securityPrices[isin] = security.price
             securityTotals[isin] = security.price * securityQuant[isin]
+
+        # Calculate average price
+
+        #sum(nr stock * price) / nr stocks
+        sellTracked = SecuritySale.objects.all()
+        quantityOwned = dict()
+        valuePayed = dict()
+        ids = []
+        for sale in sellTracked:
+            if sale.original_operation_id.quantity != sale.quantity:
+                isin = sale.original_operation_id.isin
+                price = sale.original_operation_id.price
+                owned_quantity = sale.original_operation_id.quantity - sale.quantity
+                quantityOwned[isin] = quantityOwned.get(isin, 0) + owned_quantity
+                valuePayed[isin] = valuePayed.get(isin, 0) + (owned_quantity * price)
+
+            ids.append(sale.original_operation_id.id)
+
+        operations = InvestmentOperation.objects.exclude(id__in=ids).filter(operation_type=InvestmentOperation.BUY)
+
+        for operation in operations:
+            quantityOwned[operation.isin] = quantityOwned.get(operation.isin, 0) + operation.quantity
+            valuePayed[operation.isin] = valuePayed.get(operation.isin, 0) + (operation.price * operation.quantity)
+
+        for isin in quantityOwned.keys():
+            securityAveragePrices[isin] = valuePayed[isin] / quantityOwned[isin]
+            securityTotalReturn[isin] = (1 - (valuePayed[isin] / (securityPrices[isin]*quantityOwned[isin]))) * 100
 
         # Individual weights and total Value
         context['totalValue'] = sum(securityTotals[key] for key in securityTotals.keys())
@@ -115,23 +147,40 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
                 allocation = 0
             else:
                 allocation = (float(securityTotals[dist.isin]) * float(dist.allocation) / (float(stockWeight) * float(context['totalValue']))) * 100
-            print(float(stockWeight / 100) * float(context['totalValue']))
+
             if totalRegion == None:
                 stockWeightRegions[dist.region_id] = allocation
             else:
                 stockWeightRegions[dist.region_id] = totalRegion + allocation
 
-        # weight bond distribution
+        #TODO weight bond distribution
+
+        #Security type delta target
+        targets = SecurityTypeTarget.objects.all()
+
+        for target in targets:
+            if target.security_type == SecurityDetails.STOCK:
+                context['stocksWeightDelta'] = stockWeight - target.allocation
+            elif target.security_type == SecurityDetails.REIT:
+                context['REITWeightDelta'] = reitWeight - target.allocation
+            elif target.security_type == SecurityDetails.BOND:
+                context['BondWeightDelta'] = bondWeight - target.allocation
+
 
         context['securities'] = {
             'Stocks': transform_to_security_overview(stocks),
             'REIT': transform_to_security_overview(reit),
             'Bonds': transform_to_security_overview(bonds)}
+
         context['stocksWeight'] = stockWeight
         context['REITWeight'] = reitWeight
         context['bondsWeight'] = bondWeight
         context['worldDistribution'] = stockWeightRegions
         context['REGIONS'] = securityDistribution[0].REGIONS
+        context['totalInvested'] = sum(valuePayed.values())
+        context['totalDividends'] = 0 # TODO
+        context['totalValuePercent'] = (context['totalValue'] / context['totalInvested']) * 100
+        context['totalReturn'] = (context['totalValue'] + context['totalDividends']) - context['totalInvested']
         return context
 
 
@@ -216,7 +265,6 @@ class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
         request_data = dict(request.POST.lists())
 
         for key in request_data.keys():
-            print(key)
 
             if key == 'csrfmiddlewaretoken': #FIXME
                 continue
@@ -282,9 +330,6 @@ class SecurityDetailsUpdate(LoginRequiredMixin, generic.edit.UpdateView):  # FIX
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if 'pk' in context:
-            print(context['pk'])
-        print(context)
         context['menu'] = 'transactions'
         return context
 

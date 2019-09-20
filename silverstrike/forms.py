@@ -301,7 +301,36 @@ class InvestmentOperationForm(forms.ModelForm):
                     raise forms.ValidationError("The account does not own that many securities")
 
                 securityQuantity.quantity = securityQuantity.quantity - quantity
+
+                orders = models.InvestmentOperation.objects.filter(account = src,isin = isin,operation_type = InvestmentOperation.BUY).order_by('date')
+                already_sold = 0
+                for order in orders:
+                    if already_sold == quantity:
+                        break
+
+                    try:
+                        securitySale = models.SecuritySale.objects.get(original_operation_id=order)
+                            # 1         10
+                        if securitySale.quantity < order.quantity:
+                            # 9
+                            difference = order.quantity - securitySale.quantity
+                            if difference >= (quantity -already_sold):
+                                #   1 + 9
+                                securitySale.quantity = securitySale.quantity + (quantity - already_sold)
+                                already_sold = already_sold + (quantity -already_sold)
+
+                                securitySale.save()
+                    except ObjectDoesNotExist:
+                        to_sell = quantity - already_sold
+                        if order.quantity >= to_sell:
+                            models.SecuritySale.objects.create(original_operation_id=order,quantity=to_sell)
+                            already_sold = quantity
+                        else:
+                            models.SecuritySale.objects.create(original_operation_id=order, quantity=order.quantity)
+                            already_sold = already_sold + order.quantity
+
                 securityQuantity.save()
+
             except ObjectDoesNotExist:
                 raise forms.ValidationError("The account does not own that many securities")
 
