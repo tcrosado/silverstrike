@@ -8,9 +8,11 @@ def last_day_of_month(any_day):
     return next_month - datetime.timedelta(days=next_month.day)
 
 def update_security_price(ticker,start=None,end=None):
-    most_recent = SecurityPrice.objects.order_by('date').first()
+    most_recent = SecurityPrice.objects.order_by('date').last()
+    now = datetime.datetime.now()
     if most_recent != None:
-        if most_recent.date == datetime.datetime.now():
+
+        if most_recent.date.year == now.year and most_recent.date.day == now.day and most_recent.date.month == now.month:
             return True
 
         next_date = most_recent.date + datetime.timedelta(days=1)
@@ -24,5 +26,4 @@ def update_security_price(ticker,start=None,end=None):
         SecurityPrice()
 
         SecurityPrice.objects.create(ticker=ticker, date=date, price=price)
-
     return True
