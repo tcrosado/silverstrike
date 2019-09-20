@@ -145,7 +145,7 @@
           <th>{% trans 'Actual' %}</th><td>{{ stocksWeight | floatformat:2 }} %</td><td>{{ REITWeight | floatformat:2}} %</td><td>{{ bondsWeight | floatformat:2}} %</td>
         </tr>
         <tr>
-          <th>{% trans 'Delta' %}</th><td>0 %</td><td>0 %</td><td>0 %</td>
+          <th>{% trans 'Delta' %}</th><td>{{ stocksWeightDelta | floatformat:2 }} %</td><td>{{ REITWeightDelta | floatformat:2 }} %</td><td>{{ BondWeightDelta | floatformat:2 }} %</td>
         </tr>
         </table>
     </div>

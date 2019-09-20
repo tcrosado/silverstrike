@@ -155,11 +155,23 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
         #TODO weight bond distribution
 
+        #Security type delta target
+        targets = SecurityTypeTarget.objects.all()
+
+        for target in targets:
+            if target.security_type == SecurityDetails.STOCK:
+                context['stocksWeightDelta'] = stockWeight - target.allocation
+            elif target.security_type == SecurityDetails.REIT:
+                context['REITWeightDelta'] = reitWeight - target.allocation
+            elif target.security_type == SecurityDetails.BOND:
+                context['BondWeightDelta'] = bondWeight - target.allocation
+
 
         context['securities'] = {
             'Stocks': transform_to_security_overview(stocks),
             'REIT': transform_to_security_overview(reit),
             'Bonds': transform_to_security_overview(bonds)}
+
         context['stocksWeight'] = stockWeight
         context['REITWeight'] = reitWeight
         context['bondsWeight'] = bondWeight
