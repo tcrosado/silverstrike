@@ -75,14 +75,14 @@
          <tr>
             <th>{% trans 'Actual' %}</th>
             {% for element in worldDistribution.items %}
-            <td>{{ element.1 }}%</td>
+            <td>{{ element.1 | floatformat:2 }}%</td>
             {% endfor %}
 
         </tr>
         <tr>
             <th>{% trans 'Delta' %}</th>
             {% for element in worldDistribution.items %}
-            <td>{{ element.1 }}%</td>
+            <td>{{ element.1 | floatformat:2}}%</td>
             {% endfor %}
 
         </tr>
