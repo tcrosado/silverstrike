@@ -75,14 +75,14 @@
          <tr>
             <th>{% trans 'Actual' %}</th>
             {% for element in worldDistribution.items %}
-            <td>{{ element.1 }}%</td>
+            <td>{{ element.1 | floatformat:2 }}%</td>
             {% endfor %}
 
         </tr>
         <tr>
             <th>{% trans 'Delta' %}</th>
-            {% for element in worldDistribution.items %}
-            <td>{{ element.1 }}%</td>
+            {% for element in worldDistributionDelta.items %}
+            <td>{{ element.1 | floatformat:2}}%</td>
             {% endfor %}
 
         </tr>
@@ -99,34 +99,18 @@
             <th>{% trans '15-20Y' %}</th>
             <th>{% trans '20-30Y' %}</th>
             <th>{% trans '30+' %}</th>
-            <th>{% trans 'USA' %}</th>
-            <th>{% trans 'EU' %}</th>
           </tr>
         <tr>
             <th>{% trans 'Actual' %}</th>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
+            {% for element in maturityDistribution.items %}
+            <td>{{ element.1 | floatformat:2 }}%</td>
+            {% endfor %}
         </tr>
         <tr>
             <th>{% trans 'Delta' %}</th>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
+            {% for element in maturityDistributionDelta.items %}
+            <td>{{ element.1 | floatformat:2 }}%</td>
+            {% endfor %}
         </tr>
        </table>
     </div>

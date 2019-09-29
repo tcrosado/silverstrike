@@ -562,20 +562,7 @@ class SecurityDistribution(models.Model):
     allocation = models.FloatField(default=0.0)
     region_id = models.IntegerField(choices=REGIONS, default=EZ)
 
-class SecurityPrice(models.Model):
-    ticker = models.CharField(max_length=12)
-    date = models.DateField(default=date.today)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-class SecurityTypeTarget(models.Model):
-    security_type = models.IntegerField(choices=SecurityDetails.SECURITY_TYPES, default=SecurityDetails.STOCK)
-    allocation = models.FloatField(default=0.0)
-
-class SecurityRegionTarget(models.Model):
-    region_id = models.IntegerField(choices=SecurityDistribution.REGIONS, default=SecurityDistribution.EZ)
-    allocation = models.FloatField(default=0.0)
-
-class SecurityBondMaturityTarget(models.Model):
+class SecurityBondMaturity(models.Model):
     F1T3 = 0
     F3T5 = 1
     F5T7 = 2
@@ -595,7 +582,29 @@ class SecurityBondMaturityTarget(models.Model):
         (F20T30, '20-30Y'),
         (F30, '30+'),
     )
+    class Meta:
+        unique_together = (('isin', 'maturity_id'),)
+
+    isin = models.CharField(max_length=12)
+    allocation = models.FloatField(default=0.0)
     maturity_id = models.IntegerField(choices=MATURITY, default=F1T3)
+
+class SecurityPrice(models.Model):
+    ticker = models.CharField(max_length=12)
+    date = models.DateField(default=date.today)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+class SecurityTypeTarget(models.Model):
+    security_type = models.IntegerField(choices=SecurityDetails.SECURITY_TYPES, default=SecurityDetails.STOCK)
+    allocation = models.FloatField(default=0.0)
+
+class SecurityRegionTarget(models.Model):
+    region_id = models.IntegerField(choices=SecurityDistribution.REGIONS, default=SecurityDistribution.EZ)
+    allocation = models.FloatField(default=0.0)
+
+class SecurityBondMaturityTarget(models.Model):
+
+    maturity_id = models.IntegerField(choices=SecurityBondMaturity.MATURITY, default=SecurityBondMaturity.F1T3)
     allocation = models.FloatField(default=0.0)
 
 class SecurityBondRegionTarget(models.Model):

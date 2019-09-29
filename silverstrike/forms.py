@@ -4,7 +4,7 @@ from django.utils.translation import ugettext as _
 
 from silverstrike import importers, models
 from silverstrike.models import Transaction, InvestmentOperation, Split, SecurityDistribution, SecurityDetails, \
-    SecurityBondRegionTarget, SecurityBondMaturityTarget
+    SecurityBondRegionTarget, SecurityBondMaturityTarget, SecurityBondMaturity
 
 
 class ImportUploadForm(forms.ModelForm):
@@ -382,7 +382,11 @@ class InvestmentSecurityForm(forms.ModelForm):
     security_type = forms.ChoiceField(choices=models.SecurityDetails.SECURITY_TYPES, required=True)
     ter = forms.FloatField()
 
+
+
 class InvestmentSecurityDistributionForm(forms.Form):
+    options = SecurityDistribution.REGIONS
+
     class Region:
         def __init__(self, id, name):
             self.id = id
@@ -390,11 +394,26 @@ class InvestmentSecurityDistributionForm(forms.Form):
             self.field = forms.FloatField(max_value=100.0, min_value=0.0)
             #TODO total sum must be less than 100%
 
+
     distributions = []
-    for i in SecurityDistribution.REGIONS:
+    for i in options:
         reg = Region(i[0],i[1])
         distributions.append(reg)
 
+class InvestmentSecurityBondDistributionForm(forms.Form):
+    options = SecurityBondMaturity.MATURITY
+
+    class Region:
+        def __init__(self, id, name):
+            self.id = id
+            self.name = name
+            self.field = forms.FloatField(max_value=100.0, min_value=0.0)
+            # TODO total sum must be less than 100%
+
+    distributions = []
+    for i in options:
+        reg = Region(i[0], i[1])
+        distributions.append(reg)
 
 class InvestmentTargetUpdateForm(forms.Form):
     class Target:
@@ -417,7 +436,7 @@ class InvestmentTargetUpdateForm(forms.Form):
         reg = Target(i[0], i[1])
         securityTypeDistributions.append(reg)
 
-    for i in SecurityBondMaturityTarget.MATURITY:
+    for i in SecurityBondMaturity.MATURITY:
         reg = Target(i[0], i[1])
         bondMaturityDistributions.append(reg)
 
