@@ -619,3 +619,13 @@ class SecurityBondRegionTarget(models.Model):
     region_id = models.IntegerField(choices=REGIONS, default=EU)
     allocation = models.FloatField(default=0.0)
 
+class CurrencyPreference(models.Model):
+    EUR = 0
+    USD = 1
+    CURRENCIES = (
+        (EUR, "EUR"),
+        (USD, "USD")
+    )
+
+    prefered_currency = models.IntegerField(choices=CURRENCIES,default=EUR)
+    user_id = 

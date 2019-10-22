@@ -1,0 +1,82 @@
+{% extends 'silverstrike/base.html' %}
+{% load i18n %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content_header %}
+<h1>Investments
+  <small>
+    Update configurations
+  </small>
+</h1>
+<ol class="breadcrumb">
+  <li><a href="/">Home</a></li>
+  <li><a href="{% url 'investment_overview' %}">{% trans 'Investments' %}</a></li>
+  {% if object %}
+  <li><a href="{{ object.get_absolute_url }}">{{ object }}</a></li>
+  <li class="active">{% trans 'Edit' %}</li>
+  {% else %}
+  <li class="active">{% trans 'Create' %}</li>
+  {% endif %}
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="box">
+  <div class="box-header with-border">
+  <h3 class="box-title">{% trans 'Configurations' %}</h3>
+</div>
+<div class="box-body">
+
+    <form method="POST" class="form-horizontal" >
+      {% csrf_token %}
+        <div class="col-sm-4">
+            <table class="table table-striped col-6">
+              <tr>
+                <th class="col-md-3">{% trans 'Default Currency' %}</th>
+                <td><select name="currency">
+                    {% for currencies in currencyList %}
+                        <option value="{{ currencies.0 }}">{{currencies.1}}</option>
+                    {% endfor %}
+                </select></td>
+              </tr>
+            </table>
+        </div>
+        <div class="col-sm-12">
+            <button type="submit" onclick="redirect()" class="btn btn-primary col-md-offset-2">{% if object %}{% trans 'Update' %}{% else %}{% trans 'Create' %}{% endif %}</button>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'vendor/css/bootstrap-datepicker.min.css' %}">
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'vendor/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'vendor/js/bootstrap3-typeahead.min.js' %}"></script>
+<script type="text/javascript">
+
+function updateAssetSum(){
+    sum("typeDist","typeSum")
+}
+
+function updateRegionSum(){
+    sum("regionDist","regionSum")
+}
+
+function sum(inputClass,sumId){
+    var sum = 0;
+    var dist = document.getElementsByClassName(inputClass)
+    for (i = 0; i < dist.length ; i++){
+        sum += dist[i].valueAsNumber;
+    }
+    var element = document.getElementById(sumId);
+
+    element.innerText = sum + "%";
+}
+
+</script>
+{% endblock %}

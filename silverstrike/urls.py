@@ -80,6 +80,8 @@ urlpatterns = [
          investment_views.InvestmentConfigView.as_view(), name='investment_security_list'),
     path('investments/config/prices',
          investment_views.InvestmentConfigPriceView.as_view(), name='investment_security_pricing'),
+    path('investments/config/update',
+         investment_views.InvestmentConfigUpdateView.as_view(), name='investment_config_update'),
     path('investments/target',
          investment_views.InvestmentConfigTargetView.as_view(), name='investment_portfolio_target'),
     path('investments/target/update',

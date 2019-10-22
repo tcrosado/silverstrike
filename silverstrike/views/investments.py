@@ -14,7 +14,7 @@ from django.views import generic
 from silverstrike.lib import update_security_price
 from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
     SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget, \
-    SecuritySale, SecurityBondMaturity
+    SecuritySale, SecurityBondMaturity, CurrencyPreference
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm, InvestmentSecurityBondDistributionForm
 
@@ -247,7 +247,7 @@ class InvestmentOperationsView(LoginRequiredMixin, generic.TemplateView):
 
 
 class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
-    template_name = 'silverstrike/investments.html'
+    template_name = 'silverstrike/investment_calculator.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -264,6 +264,7 @@ class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):  #
     def get_context_data(self, **kwargs):
         context = super(InvestmentOperationCreate, self).get_context_data(**kwargs)
         context['menu'] = 'transactions'
+        context['element'] = +10
         return context
 
 
@@ -286,6 +287,43 @@ class InvestmentConfigPriceView(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_security_pricing'
         return context
+
+class InvestmentConfigUpdateView(LoginRequiredMixin, generic.FormView):
+    template_name = 'silverstrike/investment_config_update.html'
+    form_class = InvestmentTargetUpdateForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['menu'] = 'investment_target_update'  # FIXME add to context current
+        context['currencyList'] = CurrencyPreference.CURRENCIES
+        return context
+
+    def get_success_url(self):
+        return reverse('investment_portfolio_target')
+
+    def post(self, request, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        request_data = dict(request.POST.lists())
+
+        for key in request_data.keys():
+            print(key)
+            print(request_data[key])
+            if key == 'csrfmiddlewaretoken':  # FIXME
+                continue
+            elif key == "currency":
+                try:
+                except
+            elif key.startswith('BR'):
+                region_id = int(key.split('BR')[1])
+                allocation = float(request_data[key][0])
+                try:
+                    target_asset = SecurityBondRegionTarget.objects.get(region_id=region_id)
+                    target_asset.allocation = allocation
+                    target_asset.save()
+                except SecurityBondRegionTarget.DoesNotExist:
+                    SecurityBondRegionTarget.objects.create(region_id=region_id, allocation=allocation)
+
+        return HttpResponseRedirect(reverse('investment_portfolio_target'))
 
 class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_portfolio_target.html'
