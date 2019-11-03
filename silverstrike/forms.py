@@ -368,6 +368,7 @@ class InvestmentOperationForm(forms.ModelForm):
 
         return transaction
 
+
 class InvestmentSecurityForm(forms.ModelForm):
     class Meta:
         model = models.SecurityDetails
@@ -383,7 +384,6 @@ class InvestmentSecurityForm(forms.ModelForm):
     ter = forms.FloatField()
 
 
-
 class InvestmentSecurityDistributionForm(forms.Form):
     options = SecurityDistribution.REGIONS
 
@@ -394,11 +394,11 @@ class InvestmentSecurityDistributionForm(forms.Form):
             self.field = forms.FloatField(max_value=100.0, min_value=0.0)
             #TODO total sum must be less than 100%
 
-
     distributions = []
     for i in options:
         reg = Region(i[0],i[1])
         distributions.append(reg)
+
 
 class InvestmentSecurityBondDistributionForm(forms.Form):
     options = SecurityBondMaturity.MATURITY
@@ -414,6 +414,7 @@ class InvestmentSecurityBondDistributionForm(forms.Form):
     for i in options:
         reg = Region(i[0], i[1])
         distributions.append(reg)
+
 
 class InvestmentTargetUpdateForm(forms.Form):
     class Target:

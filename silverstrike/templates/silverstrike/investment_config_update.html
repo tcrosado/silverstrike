@@ -36,7 +36,7 @@
                 <th class="col-md-3">{% trans 'Default Currency' %}</th>
                 <td><select name="currency">
                     {% for currencies in currencyList %}
-                        <option value="{{ currencies.0 }}">{{currencies.1}}</option>
+                        <option value="{{ currencies.0 }}" {% if currencies.0 == originalSelectedCurrency %} selected{% endif %}>{{currencies.1}}</option>
                     {% endfor %}
                 </select></td>
               </tr>

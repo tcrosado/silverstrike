@@ -2,6 +2,7 @@ import uuid
 from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 
 from django.db import models
 from django.urls import reverse
@@ -607,6 +608,7 @@ class SecurityBondMaturityTarget(models.Model):
     maturity_id = models.IntegerField(choices=SecurityBondMaturity.MATURITY, default=SecurityBondMaturity.F1T3)
     allocation = models.FloatField(default=0.0)
 
+
 class SecurityBondRegionTarget(models.Model):
     USA = 0
     EU = 1
@@ -619,6 +621,7 @@ class SecurityBondRegionTarget(models.Model):
     region_id = models.IntegerField(choices=REGIONS, default=EU)
     allocation = models.FloatField(default=0.0)
 
+
 class CurrencyPreference(models.Model):
     EUR = 0
     USD = 1
@@ -627,5 +630,5 @@ class CurrencyPreference(models.Model):
         (USD, "USD")
     )
 
-    prefered_currency = models.IntegerField(choices=CURRENCIES,default=EUR)
-    user_id = 
+    preferred_currency = models.IntegerField(choices=CURRENCIES,default=EUR)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

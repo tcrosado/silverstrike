@@ -1,9 +1,12 @@
 import decimal
 from datetime import date,datetime
 
+import django
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Max, Count, Subquery
 from django.db.models.functions import Lower
@@ -294,8 +297,13 @@ class InvestmentConfigUpdateView(LoginRequiredMixin, generic.FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
         context['menu'] = 'investment_target_update'  # FIXME add to context current
         context['currencyList'] = CurrencyPreference.CURRENCIES
+        try:
+            context['originalSelectedCurrency'] = CurrencyPreference.objects.get(user_id=user.id).preferred_currency
+        except CurrencyPreference.DoesNotExist:
+            context['originalSelectedCurrency'] = -1
         return context
 
     def get_success_url(self):
@@ -304,15 +312,20 @@ class InvestmentConfigUpdateView(LoginRequiredMixin, generic.FormView):
     def post(self, request, *args, **kwargs):
         context = super().get_context_data(**kwargs)
         request_data = dict(request.POST.lists())
+        user = request.user
 
         for key in request_data.keys():
-            print(key)
-            print(request_data[key])
             if key == 'csrfmiddlewaretoken':  # FIXME
                 continue
             elif key == "currency":
+                preferred_currency = int(request_data[key][0])
                 try:
-                except
+                    currency_preference = CurrencyPreference.objects.get(user_id=user.id)
+                    currency_preference.preferred_currency = preferred_currency
+                    currency_preference.save()
+                except CurrencyPreference.DoesNotExist:
+                    CurrencyPreference.objects.create(preferred_currency=preferred_currency, user=user)
+
             elif key.startswith('BR'):
                 region_id = int(key.split('BR')[1])
                 allocation = float(request_data[key][0])
@@ -328,6 +341,7 @@ class InvestmentConfigUpdateView(LoginRequiredMixin, generic.FormView):
 class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_portfolio_target.html'
     def get_context_data(self, **kwargs):
+        user = self.request.user
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_portfolio_target'
         context['targetAssets'] = SecurityTypeTarget.objects.all()
@@ -335,6 +349,10 @@ class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
         context['targetWorld'] = SecurityRegionTarget.objects.all()
         context['targetMaturityBonds'] = SecurityBondMaturityTarget.objects.all()
         context['targetRegionBonds'] = SecurityBondRegionTarget.objects.all()
+        try:
+            context['defaultCurrency'] = CurrencyPreference.CURRENCIES[CurrencyPreference.objects.get(user_id=user.id).preferred_currency][1]
+        except CurrencyPreference.DoesNotExist:
+            context['defaultCurrency'] = "Not set"
         return context
 
 class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
