@@ -249,6 +249,7 @@ class InvestmentOperationsView(LoginRequiredMixin, generic.TemplateView):
         return context
 
 
+
 class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_calculator.html'
 
@@ -257,6 +258,16 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         context['menu'] = 'investment-calculator'
 
         return context
+
+    def post(self,request, *args, **kwargs):
+        print("Got Post")
+        amount = request.POST.get('amount')
+        op = request.POST.get('select')
+        print(amount)
+        print(op)
+
+        #TODO Add information before redirect
+        return HttpResponseRedirect(reverse('investment-calculator'))
 
 
 class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME
