@@ -146,28 +146,8 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         bond_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.BOND))
 
         # weight world distribution (InvestmentWeightCalculator)
-        security_distribution = SecurityDistribution.objects.filter(isin__in=securityQuant.keys())
-        for dist in security_distribution:
 
-            totalRegion = totalMoneyRegion.get(dist.region_id)
-            total = float(securityTotals[dist.isin]) * float(dist.allocation / 100)
-            if totalRegion == None:
-                totalMoneyRegion[dist.region_id] = total
-            else:
-                totalMoneyRegion[dist.region_id] = totalRegion + total
-
-        for dist in security_distribution:
-            totalRegion = stockWeightRegions.get(dist.region_id)
-            if totalMoneyRegion[dist.region_id] == 0:
-                allocation = 0
-            else:
-                allocation = (float(securityTotals[dist.isin]) * float(dist.allocation) / (
-                        float(stock_weight) * float(context['totalValue']))) * 100
-
-            if totalRegion == None:
-                stockWeightRegions[dist.region_id] = allocation
-            else:
-                stockWeightRegions[dist.region_id] = totalRegion + allocation
+        stockWeightRegions = calculator.get_world_distribution_weights()
 
         # weight bond distribution (InvestmentWeightCalculator)
         bond_maturity_distribution = SecurityBondMaturity.objects.filter(isin__in=securityQuant.keys())

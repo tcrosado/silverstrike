@@ -120,7 +120,7 @@ class InvestmentWeightCalculator:
         # Get total money on bonds
         for isin in prices.keys():
             security_totals[isin] = prices[isin] * quantities[isin]
-            total_value += security_totals[isin]
+            total_value += float(security_totals[isin])
 
         for dist in security_distribution:
 
@@ -136,7 +136,7 @@ class InvestmentWeightCalculator:
             if total_money_region[dist.region_id] == 0:
                 allocation = 0
             else:
-                allocation = (float(security_totals[dist.isin]) * float(dist.allocation) / total_value) * 100
+                allocation = float(security_totals[dist.isin]) * float(dist.allocation) / total_value
 
             if total_region is None:
                 stock_weight_regions[dist.region_id] = allocation
