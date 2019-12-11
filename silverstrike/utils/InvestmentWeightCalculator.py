@@ -76,13 +76,13 @@ class InvestmentWeightCalculator:
         security_totals = dict()
         total_value = 0.0
         quantities = self.__get_security_quantities()
-        bond_maturity_distribution = SecurityBondMaturity.objects.filter(isin_in=quantities.keys())
+        bond_maturity_distribution = SecurityBondMaturity.objects.filter(isin__in=quantities.keys())
         prices = self.__get_latest_prices([bond.isin for bond in bond_maturity_distribution])
 
         # Get total money on bonds
         for isin in prices.keys():
             security_totals[isin] = prices[isin] * quantities[isin]
-            total_value += security_totals[isin]
+            total_value += float(security_totals[isin])
 
         # Get total money per maturity level (Year range)
         for maturity in bond_maturity_distribution:
@@ -99,7 +99,7 @@ class InvestmentWeightCalculator:
             if total_money_maturity[maturity.maturity_id] == 0:
                 allocation = 0
             else:
-                allocation = (float(security_totals[maturity.isin]) * float(maturity.allocation) / total_value) * 100
+                allocation = (float(security_totals[maturity.isin]) * float(maturity.allocation) / total_value)
 
             if total_maturity is None:
                 bond_weight_maturity[maturity.maturity_id] = allocation

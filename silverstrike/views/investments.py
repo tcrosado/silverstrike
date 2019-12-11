@@ -150,27 +150,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         stockWeightRegions = calculator.get_world_distribution_weights()
 
         # weight bond distribution (InvestmentWeightCalculator)
-        bond_maturity_distribution = SecurityBondMaturity.objects.filter(isin__in=securityQuant.keys())
-        for maturity in bond_maturity_distribution:
-            totalMaturity = totalMoneyMaturity.get(maturity.maturity_id)
-            total = float(securityTotals[maturity.isin]) * float(maturity.allocation / 100)
-            if totalMaturity == None:
-                totalMoneyMaturity[maturity.maturity_id] = total
-            else:
-                totalMoneyMaturity[maturity.maturity_id] = totalMaturity + total
-
-        for maturity in bond_maturity_distribution:
-            totalMaturity = bondWeightMaturity.get(maturity.maturity_id)
-            if totalMoneyMaturity[maturity.maturity_id] == 0:
-                allocation = 0
-            else:
-                allocation = (float(securityTotals[maturity.isin]) * float(maturity.allocation) / (
-                        float(bond_weight) * float(context['totalValue']))) * 100
-
-            if totalMaturity == None:
-                bondWeightMaturity[maturity.maturity_id] = allocation
-            else:
-                bondWeightMaturity[maturity.maturity_id] = totalMaturity + allocation
+        bondWeightMaturity = calculator.get_bond_maturity_weights()
 
         # DELTAS
         # Security type delta target
