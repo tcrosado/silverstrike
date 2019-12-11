@@ -463,7 +463,6 @@ class RecurringTransaction(models.Model):
 
 
 class InvestmentOperation(models.Model):
-
     BUY = 0
     SELL = 1
     DIV = 2
@@ -481,7 +480,7 @@ class InvestmentOperation(models.Model):
     quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.ForeignKey('Transaction', models.CASCADE,
-                                    related_name='transaction',blank=False,null=False)
+                                       related_name='transaction', blank=False, null=False)
 
     @property
     def is_buy(self):
@@ -498,18 +497,20 @@ class InvestmentOperation(models.Model):
     def operation_name(self):
         return self.OPERATION_TYPES[self.operation_type][1]
 
+
 class SecuritySale(models.Model):
     original_operation_id = models.ForeignKey(InvestmentOperation, models.CASCADE)
     quantity = models.IntegerField(default=0)
-    #TODO Register gains
+    # TODO Register gains
+
 
 class SecurityQuantity(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)
     isin = models.CharField(max_length=12)
     quantity = models.IntegerField(default=0)
 
-class SecurityDetails(models.Model):
 
+class SecurityDetails(models.Model):
     STOCK = 0
     REIT = 1
     BOND = 2
@@ -527,6 +528,7 @@ class SecurityDetails(models.Model):
     security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK)
     ter = models.FloatField(default=0.0)
 
+
 class SecurityDistribution(models.Model):
     NA = 0
     LA = 1
@@ -542,13 +544,13 @@ class SecurityDistribution(models.Model):
     AE = 11
 
     REGIONS = (
-        (NA,'North America'),
-        (LA,'Latin America'),
-        (UK,'United Kingdom'),
-        (EZ,'Euro Zone'),
-        (EUEZ,'Europe Ex-EZ'),
-        (EUEM,'Europe Emerging'),
-        (AF,'Africa'),
+        (NA, 'North America'),
+        (LA, 'Latin America'),
+        (UK, 'United Kingdom'),
+        (EZ, 'Euro Zone'),
+        (EUEZ, 'Europe Ex-EZ'),
+        (EUEM, 'Europe Emerging'),
+        (AF, 'Africa'),
         (ME, 'Middle East/Asia'),
         (JP, 'Japan'),
         (AU, 'Australasia'),
@@ -562,6 +564,7 @@ class SecurityDistribution(models.Model):
     isin = models.CharField(max_length=12)
     allocation = models.FloatField(default=0.0)
     region_id = models.IntegerField(choices=REGIONS, default=EZ)
+
 
 class SecurityBondMaturity(models.Model):
     F1T3 = 0
@@ -583,6 +586,7 @@ class SecurityBondMaturity(models.Model):
         (F20T30, '20-30Y'),
         (F30, '30+'),
     )
+
     class Meta:
         unique_together = (('isin', 'maturity_id'),)
 
@@ -590,21 +594,27 @@ class SecurityBondMaturity(models.Model):
     allocation = models.FloatField(default=0.0)
     maturity_id = models.IntegerField(choices=MATURITY, default=F1T3)
 
+
 class SecurityPrice(models.Model):
     ticker = models.CharField(max_length=12)
     date = models.DateField(default=date.today)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+
+#################################
+# Investment Target
+#################################
 class SecurityTypeTarget(models.Model):
     security_type = models.IntegerField(choices=SecurityDetails.SECURITY_TYPES, default=SecurityDetails.STOCK)
     allocation = models.FloatField(default=0.0)
+
 
 class SecurityRegionTarget(models.Model):
     region_id = models.IntegerField(choices=SecurityDistribution.REGIONS, default=SecurityDistribution.EZ)
     allocation = models.FloatField(default=0.0)
 
-class SecurityBondMaturityTarget(models.Model):
 
+class SecurityBondMaturityTarget(models.Model):
     maturity_id = models.IntegerField(choices=SecurityBondMaturity.MATURITY, default=SecurityBondMaturity.F1T3)
     allocation = models.FloatField(default=0.0)
 
@@ -622,6 +632,10 @@ class SecurityBondRegionTarget(models.Model):
     allocation = models.FloatField(default=0.0)
 
 
+#################################
+# Preferences
+#################################
+
 class CurrencyPreference(models.Model):
     EUR = 0
     USD = 1
@@ -630,5 +644,5 @@ class CurrencyPreference(models.Model):
         (USD, "USD")
     )
 
-    preferred_currency = models.IntegerField(choices=CURRENCIES,default=EUR)
+    preferred_currency = models.IntegerField(choices=CURRENCIES, default=EUR)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

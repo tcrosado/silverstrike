@@ -1,5 +1,6 @@
 import decimal
-from datetime import date,datetime
+from datetime import date, datetime
+from urllib.parse import urlencode
 
 import django
 from dateutil.relativedelta import relativedelta
@@ -20,6 +21,7 @@ from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQu
     SecuritySale, SecurityBondMaturity, CurrencyPreference
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm, InvestmentSecurityBondDistributionForm
+from silverstrike.utils.InvestmentWeightCalculator import InvestmentWeightCalculator
 
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -27,7 +29,6 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
     class SecurityOverview:
         def __init__(self, weight, ticker, quantity, currentPrice, averagePrice, totalPrice, totalReturn, ytdReturn):
-
             self.weight = weight
             self.ticker = ticker
             self.quantity = quantity
@@ -47,9 +48,9 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         securityPrices = dict()
         securityTotals = dict()
         securityWeights = dict()
-        stockWeight = 0
-        reitWeight = 0
-        bondWeight = 0
+        stock_weight = 0
+        reit_weight = 0
+        bond_weight = 0
         totalMoneyRegion = dict()
         totalMoneyMaturity = dict()
         stockWeightRegions = dict()
@@ -72,9 +73,9 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         for security in quantities:
             securityQuant[security.isin] = security.quantity
 
-        stocks = SecurityDetails.objects.filter(security_type=SecurityDetails.STOCK,isin__in=securityQuant.keys())
-        reit = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT,isin__in=securityQuant.keys())
-        bonds = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND,isin__in=securityQuant.keys())
+        stocks = SecurityDetails.objects.filter(security_type=SecurityDetails.STOCK, isin__in=securityQuant.keys())
+        reit = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT, isin__in=securityQuant.keys())
+        bonds = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND, isin__in=securityQuant.keys())
 
         # Map ticker to isin
         tickersMap = dict()
@@ -86,7 +87,8 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             tickersMap[security.ticker] = security.isin
 
         # get latest prices
-        latestDates = SecurityPrice.objects.filter(ticker__in=tickersMap.keys()).values('ticker').annotate(max_date=Max('date')).order_by()
+        latestDates = SecurityPrice.objects.filter(ticker__in=tickersMap.keys()).values('ticker').annotate(
+            max_date=Max('date')).order_by()
 
         prices = []
         for security in latestDates:
@@ -100,7 +102,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
         # Calculate average price
 
-        #sum(nr stock * price) / nr stocks
+        # sum(nr stock * price) / nr stocks
         sellTracked = SecuritySale.objects.all()
         quantityOwned = dict()
         valuePayed = dict()
@@ -123,24 +125,29 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
         for isin in quantityOwned.keys():
             securityAveragePrices[isin] = valuePayed[isin] / quantityOwned[isin]
-            securityTotalReturn[isin] = (1 - (valuePayed[isin] / (securityPrices[isin]*quantityOwned[isin]))) * 100
+            securityTotalReturn[isin] = (1 - (valuePayed[isin] / (securityPrices[isin] * quantityOwned[isin]))) * 100
 
         # Individual weights and total Value
+
         context['totalValue'] = sum(securityTotals[key] for key in securityTotals.keys())
         for isin in securityTotals.keys():
             securityWeights[isin] = float(securityTotals[isin] / context['totalValue']) * 100
 
-        # weight asset distribution
-        for security in stocks:
-            stockWeight = stockWeight + securityWeights[security.isin]
-        for security in reit:
-            reitWeight = reitWeight + securityWeights[security.isin]
-        for security in bonds:
-            bondWeight = bondWeight + securityWeights[security.isin]
-        # weight world distribution
-        securityDistribution = SecurityDistribution.objects.filter(isin__in=securityQuant.keys())
+        # weight asset distribution (InvestmentWeightCalculator)
 
-        for dist in securityDistribution:
+        calculator = InvestmentWeightCalculator()
+        asset_type_weights = calculator.get_asset_type_weights()
+
+        def get_security_type_name(index):
+            return SecurityDetails.SECURITY_TYPES[index][1]
+
+        stock_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.STOCK))
+        reit_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.REIT))
+        bond_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.BOND))
+
+        # weight world distribution (InvestmentWeightCalculator)
+        security_distribution = SecurityDistribution.objects.filter(isin__in=securityQuant.keys())
+        for dist in security_distribution:
 
             totalRegion = totalMoneyRegion.get(dist.region_id)
             total = float(securityTotals[dist.isin]) * float(dist.allocation / 100)
@@ -149,22 +156,22 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             else:
                 totalMoneyRegion[dist.region_id] = totalRegion + total
 
-        for dist in securityDistribution:
+        for dist in security_distribution:
             totalRegion = stockWeightRegions.get(dist.region_id)
             if totalMoneyRegion[dist.region_id] == 0:
                 allocation = 0
             else:
-                allocation = (float(securityTotals[dist.isin]) * float(dist.allocation) / (float(stockWeight) * float(context['totalValue']))) * 100
+                allocation = (float(securityTotals[dist.isin]) * float(dist.allocation) / (
+                        float(stock_weight) * float(context['totalValue']))) * 100
 
             if totalRegion == None:
                 stockWeightRegions[dist.region_id] = allocation
             else:
                 stockWeightRegions[dist.region_id] = totalRegion + allocation
 
-        #weight bond distribution
-        bondMaturityDistribution = SecurityBondMaturity.objects.filter(isin__in=securityQuant.keys())
-
-        for maturity in bondMaturityDistribution:
+        # weight bond distribution (InvestmentWeightCalculator)
+        bond_maturity_distribution = SecurityBondMaturity.objects.filter(isin__in=securityQuant.keys())
+        for maturity in bond_maturity_distribution:
             totalMaturity = totalMoneyMaturity.get(maturity.maturity_id)
             total = float(securityTotals[maturity.isin]) * float(maturity.allocation / 100)
             if totalMaturity == None:
@@ -172,13 +179,13 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             else:
                 totalMoneyMaturity[maturity.maturity_id] = totalMaturity + total
 
-        for maturity in bondMaturityDistribution:
+        for maturity in bond_maturity_distribution:
             totalMaturity = bondWeightMaturity.get(maturity.maturity_id)
             if totalMoneyMaturity[maturity.maturity_id] == 0:
                 allocation = 0
             else:
                 allocation = (float(securityTotals[maturity.isin]) * float(maturity.allocation) / (
-                            float(bondWeight) * float(context['totalValue']))) * 100
+                        float(bond_weight) * float(context['totalValue']))) * 100
 
             if totalMaturity == None:
                 bondWeightMaturity[maturity.maturity_id] = allocation
@@ -186,18 +193,18 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
                 bondWeightMaturity[maturity.maturity_id] = totalMaturity + allocation
 
         # DELTAS
-        #Security type delta target
+        # Security type delta target
         targets = SecurityTypeTarget.objects.all()
 
         for target in targets:
             if target.security_type == SecurityDetails.STOCK:
-                context['stocksWeightDelta'] = stockWeight - target.allocation
+                context['stocksWeightDelta'] = stock_weight - target.allocation
             elif target.security_type == SecurityDetails.REIT:
-                context['REITWeightDelta'] = reitWeight - target.allocation
+                context['REITWeightDelta'] = reit_weight - target.allocation
             elif target.security_type == SecurityDetails.BOND:
-                context['BondWeightDelta'] = bondWeight - target.allocation
+                context['BondWeightDelta'] = bond_weight - target.allocation
 
-        #Delta World
+        # Delta World
         stockRegionTarget = SecurityRegionTarget.objects.all()
 
         for target in stockRegionTarget:
@@ -219,16 +226,16 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
             'REIT': transform_to_security_overview(reit),
             'Bonds': transform_to_security_overview(bonds)}
 
-        context['stocksWeight'] = stockWeight
-        context['REITWeight'] = reitWeight
-        context['bondsWeight'] = bondWeight
+        context['stocksWeight'] = stock_weight
+        context['REITWeight'] = reit_weight
+        context['bondsWeight'] = bond_weight
         context['maturityDistribution'] = bondWeightMaturity
         context['maturityDistributionDelta'] = bondWeightMaturityDelta
         context['worldDistribution'] = stockWeightRegions
         context['worldDistributionDelta'] = stockWeightRegionsDelta
         context['REGIONS'] = SecurityDistribution.REGIONS
         context['totalInvested'] = sum(valuePayed.values())
-        context['totalDividends'] = 0 # TODO
+        context['totalDividends'] = 0  # TODO
         if context['totalInvested'] == 0:
             context['totalValuePercent'] = 0
         else:
@@ -249,25 +256,53 @@ class InvestmentOperationsView(LoginRequiredMixin, generic.TemplateView):
         return context
 
 
-
 class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_calculator.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment-calculator'
-
         return context
 
-    def post(self,request, *args, **kwargs):
-        print("Got Post")
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        context['category'] = request.GET.get('category')
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
         amount = request.POST.get('amount')
         op = request.POST.get('select')
-        print(amount)
-        print(op)
 
-        #TODO Add information before redirect
-        return HttpResponseRedirect(reverse('investment-calculator'))
+        if op == "buy":
+            self.buy_calculator(amount)
+        elif op == "sell":
+            self.sell_calculator(amount)
+            print("Going down")
+        else:
+            print("Nothing to do here")
+
+        base_url = reverse('investment-calculator')  # 1 /products/
+        query_string = urlencode({'category': amount})  # 2 category=42
+        url = '{}?{}'.format(base_url, query_string)  # 3 /products/?category=42
+        print(url)
+        # TODO Add information before redirect
+        # - Operations (Buy/Sell/Rebalance)
+        # - New world
+
+        # TODO Get stock and bond current distribution
+        # TODO Sell on amount should take into account taxes
+
+        return HttpResponseRedirect(url)
+
+    def buy_calculator(self, amount):
+
+        amount += amount
+        print(amount)
+
+        return amount
+
+    def sell_calculator(self, amount):
+        print(amount)
 
 
 class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME
@@ -294,13 +329,16 @@ class InvestmentConfigView(LoginRequiredMixin, generic.TemplateView):
         context['bonds'] = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND)
         return context
 
+
 class InvestmentConfigPriceView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_config.html'
     model = SecurityPrice
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_security_pricing'
         return context
+
 
 class InvestmentConfigUpdateView(LoginRequiredMixin, generic.FormView):
     template_name = 'silverstrike/investment_config_update.html'
@@ -349,8 +387,10 @@ class InvestmentConfigUpdateView(LoginRequiredMixin, generic.FormView):
 
         return HttpResponseRedirect(reverse('investment_portfolio_target'))
 
+
 class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_portfolio_target.html'
+
     def get_context_data(self, **kwargs):
         user = self.request.user
         context = super().get_context_data(**kwargs)
@@ -361,10 +401,12 @@ class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
         context['targetMaturityBonds'] = SecurityBondMaturityTarget.objects.all()
         context['targetRegionBonds'] = SecurityBondRegionTarget.objects.all()
         try:
-            context['defaultCurrency'] = CurrencyPreference.CURRENCIES[CurrencyPreference.objects.get(user_id=user.id).preferred_currency][1]
+            context['defaultCurrency'] = \
+                CurrencyPreference.CURRENCIES[CurrencyPreference.objects.get(user_id=user.id).preferred_currency][1]
         except CurrencyPreference.DoesNotExist:
             context['defaultCurrency'] = "Not set"
         return context
+
 
 class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
     template_name = 'silverstrike/investment_target_update.html'
@@ -372,7 +414,7 @@ class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu'] = 'investment_target_update' #FIXME add to context current
+        context['menu'] = 'investment_target_update'  # FIXME add to context current
         return context
 
     def get_success_url(self):
@@ -384,7 +426,7 @@ class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
 
         for key in request_data.keys():
 
-            if key == 'csrfmiddlewaretoken': #FIXME
+            if key == 'csrfmiddlewaretoken':  # FIXME
                 continue
             elif key.startswith('R'):
                 region_id = int(key.split('R')[1])
@@ -404,7 +446,7 @@ class InvestmentTargetUpdateView(LoginRequiredMixin, generic.FormView):
                     target_asset.allocation = allocation
                     target_asset.save()
                 except SecurityTypeTarget.DoesNotExist:
-                    SecurityTypeTarget.objects.create(security_type=security_type,allocation=allocation)
+                    SecurityTypeTarget.objects.create(security_type=security_type, allocation=allocation)
             elif key.startswith('BM'):
                 maturity_id = int(key.split('BM')[1])
                 allocation = float(request_data[key][0])
@@ -441,6 +483,7 @@ class SecurityDetailsCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIX
     def get_success_url(self):
         return reverse('investment_security_list')
 
+
 class SecurityDetailsUpdate(LoginRequiredMixin, generic.edit.UpdateView):  # FIXME
     model = SecurityDetails
     template_name = 'silverstrike/investment_security_create.html'
@@ -454,14 +497,14 @@ class SecurityDetailsUpdate(LoginRequiredMixin, generic.edit.UpdateView):  # FIX
     def get_success_url(self):
         return reverse('investment_security_list')
 
+
 class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # FIXME
     template_name = 'silverstrike/investment_security_distribution_edit.html'
     form_class = InvestmentSecurityDistributionForm
 
-
     def get_context_data(self, **kwargs):
         context = super(SecurityDistributionCreate, self).get_context_data(**kwargs)
-        context['menu'] = 'transactions' #FIXME add to context current
+        context['menu'] = 'transactions'  # FIXME add to context current
         return context
 
     def get(self, request, *args, **kwargs):
@@ -477,29 +520,34 @@ class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # 
         security = SecurityDetails.objects.get(pk=security_id)
         request_data = dict(request.POST.lists())
 
-
         if security.security_type == SecurityDetails.BOND:
             data_class = SecurityBondMaturity
         else:
             data_class = SecurityDistribution
 
         for key in request_data.keys():
-            if key == 'csrfmiddlewaretoken': #FIXME
+            if key == 'csrfmiddlewaretoken':  # FIXME
                 continue
             try:
                 if security.security_type == SecurityDetails.BOND:
-                    dist = data_class.objects.get(isin=security.isin,maturity_id=int(key))
+                    dist = data_class.objects.get(isin=security.isin, maturity_id=int(key))
                 else:
-                    dist = data_class.objects.get(isin=security.isin,region_id=int(key))
+                    dist = data_class.objects.get(isin=security.isin, region_id=int(key))
                 dist.allocation = float(request_data[key][0])
                 dist.save()
             except data_class.DoesNotExist:
                 if security.security_type == SecurityDetails.BOND:
-                    data_class.objects.create(isin=security.isin, maturity_id=int(key), allocation=float(request_data[key][0]))
+                    data_class.objects.create(isin=security.isin, maturity_id=int(key),
+                                              allocation=float(request_data[key][0]))
                 else:
-                    data_class.objects.create(isin=security.isin, region_id=int(key), allocation=float(request_data[key][0]))
+                    data_class.objects.create(isin=security.isin, region_id=int(key),
+                                              allocation=float(request_data[key][0]))
 
         return HttpResponseRedirect("/")
+
+
+# TODO Last Operations Security view
+# TODO new Operation ISIN
 
 class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_security_information.html'
@@ -531,13 +579,13 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
             context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
         price_distribution = []
         for region in context['securityDistribution']:
-            price_distribution.append(context['totalPrice'] * decimal.Decimal(region.allocation/100))
+            price_distribution.append(context['totalPrice'] * decimal.Decimal(region.allocation / 100))
         context['securityDistributionPrice'] = price_distribution
 
         return context
 
-    #FIXME switch to api
-    def post(self,request, *args, **kwargs):
+    # FIXME switch to api
+    def post(self, request, *args, **kwargs):
         context = super().get_context_data(**kwargs)
         security_id = context['pk']
         security = SecurityDetails.objects.get(pk=security_id)
