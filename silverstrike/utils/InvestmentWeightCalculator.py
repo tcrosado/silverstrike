@@ -1,10 +1,14 @@
 from django.db.models import Max
 
-from silverstrike.models import SecurityQuantity, SecurityDetails, SecurityPrice, SecurityBondMaturity, \
+from silverstrike.models import SecurityQuantity, SecurityDetails, SecurityBondMaturity, \
     SecurityDistribution
+from silverstrike.utils.PriceGetter import PriceGetter
 
 
 class InvestmentWeightCalculator:
+
+    def __init__(self):
+        self.priceGetter = PriceGetter()
 
     @staticmethod
     def __get_security_quantities():
@@ -16,44 +20,16 @@ class InvestmentWeightCalculator:
         return security_quantities
 
     @staticmethod
-    def __get_ticker_to_isin_map(isin_list):
-        securities = SecurityDetails.objects.filter(isin__in=isin_list)
-
-        # Map ticker to isin
-        tickers_map = dict()
-        for security in securities:
-            tickers_map[security.ticker] = security.isin
-
-        return tickers_map
-
-    @staticmethod
     def __get_type(isin):
         security = SecurityDetails.objects.get(isin=isin)
         return SecurityDetails.SECURITY_TYPES[security.security_type][1]
 
-    def __get_latest_prices(self, isin_list):
-        ticker_map = self.__get_ticker_to_isin_map(isin_list)
-        security_prices = dict()
-        latest_dates = SecurityPrice.objects.filter(ticker__in=ticker_map.keys()).values('ticker').annotate(
-            max_date=Max('date')).order_by()
-
-        prices = []
-        for security in latest_dates:
-            result = SecurityPrice.objects.get(ticker=security['ticker'], date=security['max_date'])
-            prices.append(result)
-
-        for security in prices:
-            isin = ticker_map[security.ticker]
-            security_prices[isin] = security.price
-            # securityTotals[isin] = security.price * securityQuant[isin]
-
-        return security_prices
 
     def get_asset_type_weights(self):
         weights = dict()
 
         quantities = self.__get_security_quantities()  # isin -> quantity
-        prices = self.__get_latest_prices(quantities.keys())  # isin -> price
+        prices = self.priceGetter.get_latest_prices(quantities.keys())  # isin -> price
 
         total_value = 0.0
 
@@ -77,7 +53,7 @@ class InvestmentWeightCalculator:
         total_value = 0.0
         quantities = self.__get_security_quantities()
         bond_maturity_distribution = SecurityBondMaturity.objects.filter(isin__in=quantities.keys())
-        prices = self.__get_latest_prices([bond.isin for bond in bond_maturity_distribution])
+        prices = self.priceGetter.get_latest_prices([bond.isin for bond in bond_maturity_distribution])
 
         # Get total money on bonds
         for isin in prices.keys():
@@ -115,7 +91,7 @@ class InvestmentWeightCalculator:
         total_value = 0.0
         quantities = self.__get_security_quantities()
         security_distribution = SecurityDistribution.objects.filter(isin__in=quantities.keys())
-        prices = self.__get_latest_prices([security.isin for security in security_distribution])
+        prices = self.priceGetter.get_latest_prices([security.isin for security in security_distribution])
 
         # Get total money on bonds
         for isin in prices.keys():
@@ -147,3 +123,4 @@ class InvestmentWeightCalculator:
 
 
     #TODO Target update get current data into edit
+    #TODO Move this to separate calculators

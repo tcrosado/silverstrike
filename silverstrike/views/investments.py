@@ -2,15 +2,9 @@ import decimal
 from datetime import date, datetime
 from urllib.parse import urlencode
 
-import django
-from dateutil.relativedelta import relativedelta
-from django.conf import settings
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
-from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import Max, Count, Subquery
-from django.db.models.functions import Lower
+from django.db.models import Max
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
@@ -22,6 +16,7 @@ from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQu
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm, InvestmentSecurityBondDistributionForm
 from silverstrike.utils.InvestmentWeightCalculator import InvestmentWeightCalculator
+from silverstrike.utils.PriceGetter import PriceGetter
 
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -48,14 +43,7 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         securityPrices = dict()
         securityTotals = dict()
         securityWeights = dict()
-        stock_weight = 0
-        reit_weight = 0
-        bond_weight = 0
-        totalMoneyRegion = dict()
-        totalMoneyMaturity = dict()
-        stockWeightRegions = dict()
         stockWeightRegionsDelta = dict()
-        bondWeightMaturity = dict()
         bondWeightMaturityDelta = dict()
 
         def transform_to_security_overview(list):
@@ -70,6 +58,9 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
                     totalReturn=securityTotalReturn[security.isin],
                     ytdReturn=0) for security in list]
 
+        def get_security_type_name(index):
+            return SecurityDetails.SECURITY_TYPES[index][1]
+
         for security in quantities:
             securityQuant[security.isin] = security.quantity
 
@@ -77,29 +68,12 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         reit = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT, isin__in=securityQuant.keys())
         bonds = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND, isin__in=securityQuant.keys())
 
-        # Map ticker to isin
-        tickersMap = dict()
-        for security in stocks:
-            tickersMap[security.ticker] = security.isin
-        for security in reit:
-            tickersMap[security.ticker] = security.isin
-        for security in bonds:
-            tickersMap[security.ticker] = security.isin
-
         # get latest prices
-        latestDates = SecurityPrice.objects.filter(ticker__in=tickersMap.keys()).values('ticker').annotate(
-            max_date=Max('date')).order_by()
+        securities = SecurityDetails.objects.filter(isin__in=securityQuant.keys())
+        securityPrices = PriceGetter().get_latest_prices([security.isin for security in securities])
 
-        prices = []
-        for security in latestDates:
-            result = SecurityPrice.objects.get(ticker=security['ticker'], date=security['max_date'])
-            prices.append(result)
-
-        for security in prices:
-            isin = tickersMap[security.ticker]
-            securityPrices[isin] = security.price
-            securityTotals[isin] = security.price * securityQuant[isin]
-
+        for isin in securityPrices.keys():
+            securityTotals[isin] = securityPrices[isin] * securityQuant[isin]
         # Calculate average price
 
         # sum(nr stock * price) / nr stocks
@@ -138,15 +112,11 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         calculator = InvestmentWeightCalculator()
         asset_type_weights = calculator.get_asset_type_weights()
 
-        def get_security_type_name(index):
-            return SecurityDetails.SECURITY_TYPES[index][1]
-
         stock_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.STOCK))
         reit_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.REIT))
         bond_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.BOND))
 
         # weight world distribution (InvestmentWeightCalculator)
-
         stockWeightRegions = calculator.get_world_distribution_weights()
 
         # weight bond distribution (InvestmentWeightCalculator)
