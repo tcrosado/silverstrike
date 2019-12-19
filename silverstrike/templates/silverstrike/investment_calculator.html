@@ -75,24 +75,77 @@
 </div>
 </div>
 <div class="row">
-<div class="col-md-8">
+<div class="col-md-12">
   <div class="box">
     <div class="box-header">
       <h3 class="box-title">World Stock Distribution</h3>
     </div>
     <div class="box-body">
-
+        <table class="table table-striped">
+            <tr>
+              <th></th>
+              {% for region in regionList %}
+                <th>{{ region.1 }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+                <th>{% trans 'New' %}</th>
+                {% for asset in targetWorld %}
+                    <td>--,- %</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>{% trans 'Target' %}</th>
+                {% for asset in targetWorld %}
+                    <td>{{asset.allocation | floatformat:1}} %</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>{% trans 'Delta' %}</th>
+                {% for asset in targetWorld %}
+                    <td>--,- %</td>
+                {% endfor %}
+            </tr>
+        </table>
     </div>
   </div>
+  </div>
+<div class="col-md-8">
   <div class="box">
     <div class="box-header">
       <h3 class="box-title">Bond Maturity Distribution</h3>
     </div>
     <div class="box-body">
-
+        <table class="table table-striped">
+        <tr>
+          <th></th>
+          {% for maturity in bondMaturityList %}
+                <th>{{ maturity.1}}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+          <th>{% trans 'New' %}</th>
+            {% for asset in targetMaturityBonds %}
+                <td> --,- %</td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>{% trans 'Target' %}</th>
+            {% for asset in targetMaturityBonds %}
+                <td>{{asset.allocation}} %</td>
+            {% endfor %}
+        </tr>
+        <tr>
+          <th>{% trans 'Delta' %}</th>
+            {% for asset in targetMaturityBonds %}
+                <td> --,- %</td>
+            {% endfor %}
+        </tr>
+        </table>
     </div>
   </div>
-</div><div class="col-md-4">
+</div>
+<div class="col-md-4">
   <div class="box">
     <div class="box-header">
       <h3 class="box-title">Asset Distribution</h3>
@@ -103,51 +156,19 @@
           <th></th><th>{% trans 'Stocks' %}</th><th>{% trans 'REIT' %}</th><th>{% trans 'Bonds' %}</th>
         </tr>
         <tr>
-          <th>{% trans 'New' %}</th><td>{{ stocksWeight | floatformat:2 }} %</td><td>{{ REITWeight | floatformat:2}} %</td><td>{{ bondsWeight | floatformat:2}} %</td>
+          <th>{% trans 'New' %}</th><td>--,- %</td><td>--,- %</td><td>--,- %</td>
         </tr>
         <tr>
-          <th>{% trans 'Target' %}</th><td>{{ stocksWeightDelta | floatformat:2 }} %</td><td>{{ REITWeightDelta | floatformat:2 }} %</td><td>{{ BondWeightDelta | floatformat:2 }} %</td>
+          <th>{% trans 'Target' %}</th>
+            <td>{{ targetStock.allocation | floatformat:2 }} %</td>
+            <td>{{ targetREIT.allocation | floatformat:2 }} %</td>
+            <td>{{ targetBond.allocation | floatformat:2 }} %</td>
         </tr>
         <tr>
-          <th>{% trans 'Delta' %}</th><td>{{ stocksWeightDelta | floatformat:2 }} %</td><td>{{ REITWeightDelta | floatformat:2 }} %</td><td>{{ BondWeightDelta | floatformat:2 }} %</td>
+          <th>{% trans 'Delta' %}</th><td>--,- %</td><td>--,- %</td><td>--,- %</td>
         </tr>
         </table>
     </div>
   </div>
 </div>
-{% for securityType,securityList in securities.items %}
-<div class="col-md-12">
-  <div class="box">
-    <div class="box-header">
-      <h3 class="box-title">{{securityType}}</h3>
-    </div>
-    <div class="box-body">
-      <table class="table table-striped">
-          <tr>
-            <th>{% trans 'Weight' %}</th>
-            <th>{% trans 'Ticker' %}</th>
-            <th>{% trans 'Quantity' %}</th>
-            <th>{% trans 'Current Price' %}</th>
-            <th>{% trans 'Average Price' %}</th>
-            <th>{% trans 'Total Price' %}</th>
-            <th>{% trans 'Total Return' %}</th>
-            <th>{% trans 'YTD Return' %}</th>
-          </tr>
-        {% for security in securityList %}
-        <tr>
-          <td>{{ security.weight | floatformat:2 }} %</td>
-          <td>{{ security.ticker }}</td>
-          <td>{{ security.quantity }}</td>
-          <td>{{ security.currentPrice | floatformat:2 }} €</td>
-          <td>{{ security.averagePrice | floatformat:2 }} €</td>
-          <td>{{ security.totalPrice | floatformat:2 }} €</td>
-          <td {% if security.totalReturn >= 0 %} class="text-green"{% else %} class="text-red" {% endif %}>{{ security.totalReturn | floatformat:2 }} %</td>
-          <td>{{ security.ytdReturn }}</td>
-        </tr>
-        {% endfor %}
-       </table>
-    </div>
-  </div>
-</div>
-{% endfor %}
 {% endblock %}

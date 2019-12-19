@@ -4,7 +4,6 @@ from urllib.parse import urlencode
 
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Max
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
@@ -15,6 +14,7 @@ from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQu
     SecuritySale, SecurityBondMaturity, CurrencyPreference
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm, InvestmentSecurityBondDistributionForm
+from silverstrike.utils.InvestmentCalculator import InvestmentCalculator
 from silverstrike.utils.InvestmentWeightCalculator import InvestmentWeightCalculator
 from silverstrike.utils.PriceGetter import PriceGetter
 
@@ -192,6 +192,13 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment-calculator'
+        context['targetStock'] = SecurityTypeTarget.objects.get(security_type=SecurityDetails.STOCK)
+        context['targetREIT'] = SecurityTypeTarget.objects.get(security_type=SecurityDetails.REIT)
+        context['targetBond'] = SecurityTypeTarget.objects.get(security_type=SecurityDetails.BOND)
+        context['regionList'] = SecurityDistribution.REGIONS
+        context['bondMaturityList'] = SecurityBondMaturity.MATURITY
+        context['targetWorld'] = SecurityRegionTarget.objects.all()
+        context['targetMaturityBonds'] = SecurityBondMaturityTarget.objects.all()
         return context
 
     def get(self, request, *args, **kwargs):
@@ -327,6 +334,7 @@ class InvestmentConfigTargetView(LoginRequiredMixin, generic.TemplateView):
         context['menu'] = 'investment_portfolio_target'
         context['targetAssets'] = SecurityTypeTarget.objects.all()
         context['regionList'] = SecurityDistribution.REGIONS
+        context['bondMaturityList'] = SecurityBondMaturity.MATURITY
         context['targetWorld'] = SecurityRegionTarget.objects.all()
         context['targetMaturityBonds'] = SecurityBondMaturityTarget.objects.all()
         context['targetRegionBonds'] = SecurityBondRegionTarget.objects.all()

@@ -71,7 +71,7 @@
        <table class="table table-striped">
           <tr>
             <th></th>
-            {% for maturity in targetMaturityBonds.0.MATURITY %}
+            {% for maturity in bondMaturityList %}
                 <th>{{ maturity.1}}</th>
             {% endfor %}
             {% for region in targetRegionBonds.0.REGIONS %}
@@ -91,7 +91,7 @@
         </tr>
            <tr>
             <th>{% trans 'Actual' %}</th>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
@@ -104,7 +104,7 @@
         </tr>
            <tr>
             <th>{% trans 'Delta' %}</th>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
@@ -142,7 +142,7 @@
           <tr>
             <th>{% trans 'Actual' %}</th>
             <td>0</td>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
@@ -157,7 +157,7 @@
           <tr>
             <th>{% trans 'Delta' %}</th>
             <td>0</td>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
