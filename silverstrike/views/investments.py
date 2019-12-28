@@ -480,8 +480,7 @@ class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # 
                 else:
                     data_class.objects.create(isin=security.isin, region_id=int(key),
                                               allocation=float(request_data[key][0]))
-
-        return HttpResponseRedirect("/")
+        return HttpResponseRedirect(reverse('investment_security_details', args=[security_id]))
 
 
 # TODO Last Operations Security view
