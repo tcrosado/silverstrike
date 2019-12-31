@@ -14,9 +14,12 @@ from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQu
     SecuritySale, SecurityBondMaturity, CurrencyPreference
 from silverstrike.forms import InvestmentOperationForm, InvestmentSecurityForm, InvestmentSecurityDistributionForm, \
     InvestmentTargetUpdateForm, InvestmentSecurityBondDistributionForm
+from silverstrike.utils.AssetTypeWeightCalculator import AssetTypeWeightCalculator
+from silverstrike.utils.BondMaturityWeightCalculator import BondMaturityWeightCalculator
 from silverstrike.utils.InvestmentCalculator import InvestmentCalculator
 from silverstrike.utils.InvestmentWeightCalculator import InvestmentWeightCalculator
 from silverstrike.utils.PriceGetter import PriceGetter
+from silverstrike.utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -109,18 +112,16 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
 
         # weight asset distribution (InvestmentWeightCalculator)
 
-        calculator = InvestmentWeightCalculator()
-        asset_type_weights = calculator.get_asset_type_weights()
+        asset_type_weights = AssetTypeWeightCalculator().calculate_weights()
 
         stock_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.STOCK))
         reit_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.REIT))
         bond_weight = asset_type_weights.get(get_security_type_name(SecurityDetails.BOND))
 
         # weight world distribution (InvestmentWeightCalculator)
-        stockWeightRegions = calculator.get_world_distribution_weights()
-
+        stockWeightRegions = RegionDistributionWeightCalculator().calculate_weights()
         # weight bond distribution (InvestmentWeightCalculator)
-        bondWeightMaturity = calculator.get_bond_maturity_weights()
+        bondWeightMaturity = BondMaturityWeightCalculator().calculate_weights()
 
         # DELTAS
         # Security type delta target
@@ -207,13 +208,14 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        amount = request.POST.get('amount')
+        amount = float(request.POST.get('amount'))
         op = request.POST.get('select')
 
         if op == "buy":
-            self.buy_calculator(amount)
+            print("Up we go")
+            print(self.buy_calculator(amount))
         elif op == "sell":
-            self.sell_calculator(amount)
+            print(self.sell_calculator(amount))
             print("Going down")
         else:
             print("Nothing to do here")
@@ -223,6 +225,8 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         url = '{}?{}'.format(base_url, query_string)  # 3 /products/?category=42
         print(url)
         # TODO Add information before redirect
+        # TODO Fix Last updated date
+        # TODO Lastest Price
         # - Operations (Buy/Sell/Rebalance)
         # - New world
 
@@ -232,14 +236,12 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         return HttpResponseRedirect(url)
 
     def buy_calculator(self, amount):
-
-        amount += amount
-        print(amount)
-
-        return amount
+        investment_calculator = InvestmentCalculator()
+        return investment_calculator.buy(amount)
 
     def sell_calculator(self, amount):
-        print(amount)
+        investment_calculator = InvestmentCalculator()
+        return investment_calculator.sell(amount)
 
 
 class InvestmentOperationCreate(LoginRequiredMixin, generic.edit.CreateView):  # FIXME

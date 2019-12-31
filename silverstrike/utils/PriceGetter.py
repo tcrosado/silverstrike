@@ -25,7 +25,6 @@ class PriceGetter:
     @staticmethod
     def __get_ticker_to_isin_map(isin_list):
         securities = SecurityDetails.objects.filter(isin__in=isin_list)
-
         # Map ticker to isin
         tickers_map = dict()
         for security in securities:
