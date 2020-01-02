@@ -74,7 +74,7 @@ urlpatterns = [
          investment_views.InvestmentOperationsView.as_view(), name='investment_operations'),
     path('investments/operations/create',
          investment_views.InvestmentOperationCreate.as_view(), name='investment_operation_new'),
-    path('investments/calculator/',
+    path('investments/calculator',
          investment_views.InvestmentCalculatorView.as_view(), name='investment-calculator'),
     path('investments/config/',
          investment_views.InvestmentConfigView.as_view(), name='investment_security_list'),
