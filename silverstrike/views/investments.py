@@ -20,6 +20,7 @@ from silverstrike.utils.InvestmentCalculator import InvestmentCalculator
 from silverstrike.utils.InvestmentWeightCalculator import InvestmentWeightCalculator
 from silverstrike.utils.PriceGetter import PriceGetter
 from silverstrike.utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
+from silverstrike.utils.SecurityOperationCalculationAdapter import SecurityOperationCalculationAdapter
 
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -204,27 +205,42 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        context['category'] = request.GET.get('category')
+        data = dict(request.GET)
+        if len(data.keys()) != 0:
+            #TODO check amount and operation exists
+            #TODO set operation on html select
+            #TODO set loader on calc
+            context['amount'] = float(data.pop('amount')[0])
+            context['operation'] = data.pop('operation')[0]
+            if len(data.keys()) != 0:
+                # TODO
+                securities = dict()
+                for isin in data.keys():
+                    securities[isin] = int(data[isin][0])
+                security_operation_list = SecurityOperationCalculationAdapter(securities).get_operation_list()
+                context['security_operations'] = security_operation_list
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
         amount = float(request.POST.get('amount'))
         op = request.POST.get('select')
-
+        new_security_list = dict()
+        #TODO enum buy sell
         if op == "buy":
-            print("Up we go")
-            print(self.buy_calculator(amount))
+            new_security_list = self.buy_calculator(amount)
         elif op == "sell":
-            print(self.sell_calculator(amount))
-            print("Going down")
+            print("TODO")
+            new_security_list = self.sell_calculator(amount)
         else:
             print("Nothing to do here")
 
+        new_security_list['amount'] = amount
+        new_security_list['operation'] = op
+
         base_url = reverse('investment-calculator')  # 1 /products/
-        query_string = urlencode({'category': amount})  # 2 category=42
+        query_string = urlencode(new_security_list)  # 2 category=42
         url = '{}?{}'.format(base_url, query_string)  # 3 /products/?category=42
-        print(url)
-        # TODO Add information before redirect
+
         # TODO Fix Last updated date
         # TODO Lastest Price
         # - Operations (Buy/Sell/Rebalance)
