@@ -21,6 +21,7 @@ from silverstrike.utils.InvestmentWeightCalculator import InvestmentWeightCalcul
 from silverstrike.utils.PriceGetter import PriceGetter
 from silverstrike.utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 from silverstrike.utils.SecurityOperationCalculationAdapter import SecurityOperationCalculationAdapter
+from silverstrike.utils.SecurityQuantityMutableGetter import SecurityQuantityMutableGetter
 
 
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
@@ -207,9 +208,13 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         context = self.get_context_data(**kwargs)
         data = dict(request.GET)
         if len(data.keys()) != 0:
-            #TODO check amount and operation exists
-            #TODO set operation on html select
-            #TODO set loader on calc
+            # TODO check amount and operation exists
+            # TODO set operation on html select
+            # TODO set loader on calc
+            # TODO save button
+                # TODO edit Operations/ Tx
+            # TODO add balance to investment Operations
+            # TODO dont assume dictionaries are ordered (template)
             context['amount'] = float(data.pop('amount')[0])
             context['operation'] = data.pop('operation')[0]
             if len(data.keys()) != 0:
@@ -218,6 +223,16 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
                 for isin in data.keys():
                     securities[isin] = int(data[isin][0])
                 security_operation_list = SecurityOperationCalculationAdapter(securities).get_operation_list()
+                # TODO method
+                security_getter = SecurityQuantityMutableGetter()
+                for isin in securities.keys():
+                    security_getter.set_security_quantity(isin, securities[isin])
+                context['region_weights'] = RegionDistributionWeightCalculator(security_getter).calculate_weights()
+                asset_weights = AssetTypeWeightCalculator(security_getter).calculate_weights()
+                context['asset_weights'] = dict()
+                for (index, name) in SecurityDetails.SECURITY_TYPES:
+                    context['asset_weights'][index] = asset_weights[name]
+                context['bond_weights'] = BondMaturityWeightCalculator(security_getter).calculate_weights()
                 context['security_operations'] = security_operation_list
         return self.render_to_response(context)
 

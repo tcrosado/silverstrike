@@ -22,8 +22,8 @@
             <th>{% trans 'Operation' %}</th>
             <th>{% trans 'Securities' %}</th>
             <th>{% trans 'Units' %}</th>
-            <th>Unit Price</th>
-            <th>Total Price</th>
+            <th>Unit Value</th>
+            <th>Total Value</th>
             <th>Stocks After Operation</th>
 
 
@@ -32,7 +32,7 @@
              <tr>
                 <td>{{ operation.operation }}</td>
                 <td>{{ operation.ticker }}</td>
-                <td>{{ operation.units }}</td>
+                <td {% if operation.units > 0 %} class="text-green"{% else %} class="text-red" {% endif %}>{{ operation.units }}</td>
                <!-- <td {% if element > 0 %} class="text-green"{% else %} class="text-red" {% endif %}>+10</td> -->
                <td>{{ operation.unit_price }} €</td>
                <td>{{ operation.total_price }} €</td>
@@ -41,6 +41,10 @@
              </tr>
           {% endfor %}
        </table>
+      {% if security_operations is not None %}
+        <input type="submit" class="btn btn-primary" value="Save">
+      {% endif %}
+
   </div>
 </div>
 </div>
@@ -93,8 +97,13 @@
             </tr>
             <tr>
                 <th>{% trans 'New' %}</th>
-                {% for asset in targetWorld %}
+                {% if not region_weights.values %}
+                 {% for region in regionList %}
                     <td>--,- %</td>
+                 {% endfor %}
+                {% endif %}
+                {% for weight in region_weights.values %}
+                    <td> {{weight | floatformat:1}} %</td>
                 {% endfor %}
             </tr>
             <tr>
@@ -128,8 +137,13 @@
         </tr>
         <tr>
           <th>{% trans 'New' %}</th>
-            {% for asset in targetMaturityBonds %}
+            {% if not bond_weights.values %}
+                 {% for asset in targetMaturityBonds %}
                 <td> --,- %</td>
+                {% endfor %}
+            {% endif %}
+            {% for weight in bond_weights.values %}
+                <td> {{weight | floatformat:1}} %</td>
             {% endfor %}
         </tr>
         <tr>
@@ -159,7 +173,15 @@
           <th></th><th>{% trans 'Stocks' %}</th><th>{% trans 'REIT' %}</th><th>{% trans 'Bonds' %}</th>
         </tr>
         <tr>
-          <th>{% trans 'New' %}</th><td>--,- %</td><td>--,- %</td><td>--,- %</td>
+          <th>{% trans 'New' %}</th>
+            {% if not region_weights.values %}
+            <!-- TODO -->
+            <td>--,- %</td><td>--,- %</td><td>--,- %</td>
+            {% endif %}
+            {% for weight in asset_weights.values %}
+                <td> {{weight | floatformat:1}} %</td>
+            {% endfor %}
+
         </tr>
         <tr>
           <th>{% trans 'Target' %}</th>
