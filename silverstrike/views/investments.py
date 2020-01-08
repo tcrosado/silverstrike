@@ -37,6 +37,11 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment_overview'
+        today = date.today()
+        # TODO fix year
+        begining = datetime.strptime(str(today.year-1), '%Y')
+
+        context['dates'] = [begining.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d")]
         quantities = SecurityQuantity.objects.all()
         securityAveragePrices = dict()
         securityTotalReturn = dict()
@@ -444,6 +449,7 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         last_price = SecurityPrice.objects.order_by('date').last()
         context['securityPrice'] = last_price
         today = date.today()
+        # TODO fix year
         begining = datetime.strptime(str(today.year), '%Y')
 
         context['dates'] = [begining.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d")]

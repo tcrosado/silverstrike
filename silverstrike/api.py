@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.http import JsonResponse
 
-from .models import Account, Split, SecurityPrice, SecurityDetails
+from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation
 
 
 @login_required
@@ -79,6 +79,7 @@ def category_spending(request, dstart, dend):
         categories, spent = [], []
     return JsonResponse({'categories': categories, 'spent': spent})
 
+
 @login_required
 def get_security_prices(request,security_id,dstart,dend):
     dstart = datetime.datetime.strptime(dstart, '%Y-%m-%d')
@@ -92,3 +93,23 @@ def get_security_prices(request,security_id,dstart,dend):
         labels.append(security_price.date)
 
     return JsonResponse({'data': data, 'labels': labels})
+
+# TODO New Investment Operation list securities
+
+@login_required
+def get_investment_overview_data(request,dstart,dend):
+    dstart = datetime.datetime.strptime(dstart, '%Y-%m-%d')
+    dend = datetime.datetime.strptime(dend, '%Y-%m-%d')
+    dividends = InvestmentOperation.objects.filter(operation_type= InvestmentOperation.DIV, date__range=[dstart,dend]).order_by('date')
+    cumulative = []
+    dates = []
+    acc = 0
+    for dividend in dividends:
+        acc += dividend.price
+        cumulative.append(acc)
+        dates.append(dividend.date)
+    # Data cumulative dividends
+    # Label date
+    # TODO add money added
+    # TODO add total value
+    return JsonResponse({'dividends': cumulative, 'dates': dates})

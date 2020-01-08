@@ -24,9 +24,6 @@
 <div class="row">
 <div class="col-md-8">
 <div class="box">
-  <div class="box-header">
-    <h3 class="box-title">Cens</h3>
-  </div>
   <div class="box-body">
     <canvas id="balanceChart" width="400" height="200"></canvas>
   </div>
@@ -170,5 +167,76 @@
   </div>
 </div>
 {% endfor %}
+{% endblock %}
+{% block scripts %}
 
+<script src="{% static 'vendor/js/Chart.bundle.min.js' %}"></script>
+<script>
+
+    $.getJSON("{% url 'api_investment_overview_data' dates.0 dates.1 %}", {}, function(res, status) {
+
+          var data = {
+              labels: res.dates,
+              datasets: [{
+                label: "Dividends",
+                backgroundColor: "rgba(255,255,255,0)",
+                borderColor: "rgba(99,132,255,1)",
+                borderWidth: 2,
+                hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                hoverBorderColor: "rgba(255,99,132,1)",
+                data: res.dividends,
+              }]
+            };
+
+           var a = [{
+                label: "Total Value",
+                backgroundColor: "rgba(255,255,255,0)",
+                borderColor: "rgba(255,99,132,1)",
+                borderWidth: 2,
+                hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                hoverBorderColor: "rgba(255,99,132,1)",
+                data: [22, 35, 55, 57, 60, 74, 110],
+              },{
+                label: "Invested",
+                backgroundColor: "rgba(255,255,255,0)",
+                borderColor: "rgba(132,99,255,1)",
+                borderWidth: 2,
+                hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                hoverBorderColor: "rgba(255,99,132,1)",
+                data: [2, 30, 48, 50, 55, 70, 100],
+              }]
+
+            var option = {
+              scales: {
+                yAxes: [{
+                  stacked: false,
+                  gridLines: {
+                    display: true,
+                    color: "rgba(255,99,132,0.2)"
+                  }
+                }],
+                xAxes: [{
+                  gridLines: {
+                    display: false
+                  }
+                }]
+              }
+            };
+
+            var ctx = document.getElementById("balanceChart").getContext('2d');
+            var myChart = new Chart(ctx, {
+              type: 'line',
+              options: {
+                  scales: {
+                      yAxes: [{
+                          ticks: {
+                              beginAtZero: false
+                          }
+                      }]
+                  }
+              },
+              data: data
+            });
+    });
+</script>
 {% endblock %}

@@ -139,6 +139,8 @@ urlpatterns = [
          name='income_expense_report'),
     path('api/investment/security/<int:security_id>/price/<dstart>/<dend>/',
          api.get_security_prices, name='api_security_prices'),
+    path('api/investment/overview/<dstart>/<dend>/',
+         api.get_investment_overview_data, name='api_investment_overview_data'),
     path('api/accounts/<account_type>/', api.get_accounts, name='api_accounts'),
     path('api/balance/<dstart>/<dend>/', api.get_balances, name='api_balance'),
     path('api/account/<int:account_id>/balance/<dstart>/<dend>/',
