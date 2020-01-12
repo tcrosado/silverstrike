@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.http import JsonResponse
 
-from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation
+from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation, SecurityQuantity
 
 
 @login_required
@@ -97,19 +97,68 @@ def get_security_prices(request,security_id,dstart,dend):
 # TODO New Investment Operation list securities
 
 @login_required
-def get_investment_overview_data(request,dstart,dend):
+def get_investment_overview_data(request, dstart, dend):
+
+    def merge_accumulation(operation_list1, operation_list2):
+        def merge_operation_list(operation_list, merged=dict()):
+            for operation in operation_list:
+                date = operation['date']
+                value = operation['value']
+                date_value = dict()
+                date_value.setdefault('date', date)
+                date_value.setdefault('value', 0)
+                merged.setdefault(date, date_value)
+                merged[date]['value'] += value
+                # FIXME simplify N*M
+            return merged
+
+        merge = merge_operation_list(operation_list1)
+        return list(merge_operation_list(operation_list2, merge).values())
+
     dstart = datetime.datetime.strptime(dstart, '%Y-%m-%d')
     dend = datetime.datetime.strptime(dend, '%Y-%m-%d')
     dividends = InvestmentOperation.objects.filter(operation_type= InvestmentOperation.DIV, date__range=[dstart,dend]).order_by('date')
-    cumulative = []
-    dates = []
-    acc = 0
-    for dividend in dividends:
-        acc += dividend.price
-        cumulative.append(acc)
-        dates.append(dividend.date)
+    operations = InvestmentOperation.objects.filter(date__range=[dstart, dend]).order_by('date')
+    # TODO only if dend == today
+    # TODO select single user
+    current_quantities = SecurityQuantity.objects.all()
+    tracked_quatities = dict()
+    # Go to security price list get security price for each date
+
+    acc = dict()
+    acc[InvestmentOperation.DIV] = []
+    acc[InvestmentOperation.SELL] = []
+    acc[InvestmentOperation.BUY] = []
+
+    for operation in operations:
+        data = dict()
+        data['date'] = operation.date
+
+        if len(acc[operation.operation_type]) == 0:
+            data['value'] = operation.price * operation.quantity
+        else:
+            data['value'] = acc[operation.operation_type][-1]['value'] + (operation.price * operation.quantity)
+
+        tracked_quatities.setdefault(operation.isin, 0)
+
+        if operation.operation_type == InvestmentOperation.SELL:
+            data['value'] *= -1
+            tracked_quatities[operation.isin] = tracked_quatities.get(operation.isin) - operation.quantity
+        elif operation.operation_type == InvestmentOperation.BUY:
+            tracked_quatities[operation.isin] = tracked_quatities.get(operation.isin) + operation.quantity
+
+        acc[operation.operation_type] += [data]
+    print('stuff')
+    invested = merge_accumulation(acc[InvestmentOperation.BUY], acc[InvestmentOperation.SELL])
+    print('stuff +')
+    dividends = acc[InvestmentOperation.DIV]
+    print('stuff + 2')
+    total_value = 0 # based on price history (isin to ticker map)
+    print({'dividends': dividends, 'totalValue': total_value, 'invested': invested})
+    #(quantities * history price)+dividends
     # Data cumulative dividends
     # Label date
+    # get current quantitites and go back in time to get initial ones
     # TODO add money added
     # TODO add total value
-    return JsonResponse({'dividends': cumulative, 'dates': dates})
+    return JsonResponse({'dividends': dividends, 'totalValue': total_value, 'invested': invested})
