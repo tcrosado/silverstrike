@@ -174,9 +174,26 @@
 <script>
 
     $.getJSON("{% url 'api_investment_overview_data' dates.0 dates.1 %}", {}, function(res, status) {
+          var labelList = []
+
+          res.invested.forEach(
+            (element) => {
+              labelList.push(Date.parse(element.x));
+            }
+          );
+
+          res.dividends.forEach(
+            (element) => {
+              labelList.push(Date.parse(element.x));
+            }
+          );
+          labelList.sort( (a,b) => {return a-b})
+          labelList = labelList.map( function(element) { 
+             return new Date(element).toISOString().split('T')[0]
+            })
 
           var data = {
-              labels: res.dates,
+              labels: labelList,
               datasets: [{
                 label: "Dividends",
                 backgroundColor: "rgba(255,255,255,0)",
@@ -184,18 +201,7 @@
                 borderWidth: 2,
                 hoverBackgroundColor: "rgba(255,99,132,0.4)",
                 hoverBorderColor: "rgba(255,99,132,1)",
-                data: res.dividends,
-              }]
-            };
-
-           var a = [{
-                label: "Total Value",
-                backgroundColor: "rgba(255,255,255,0)",
-                borderColor: "rgba(255,99,132,1)",
-                borderWidth: 2,
-                hoverBackgroundColor: "rgba(255,99,132,0.4)",
-                hoverBorderColor: "rgba(255,99,132,1)",
-                data: [22, 35, 55, 57, 60, 74, 110],
+                data: res.dividends
               },{
                 label: "Invested",
                 backgroundColor: "rgba(255,255,255,0)",
@@ -203,8 +209,17 @@
                 borderWidth: 2,
                 hoverBackgroundColor: "rgba(255,99,132,0.4)",
                 hoverBorderColor: "rgba(255,99,132,1)",
-                data: [2, 30, 48, 50, 55, 70, 100],
+                data: res.invested
+              },{
+                label: "Total Value",
+                backgroundColor: "rgba(255,255,255,0)",
+                borderColor: "rgba(255,99,132,1)",
+                borderWidth: 2,
+                hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                hoverBorderColor: "rgba(255,99,132,1)",
+                data: [22, 35, 55, 57, 60, 74, 110],
               }]
+            };
 
             var option = {
               scales: {
