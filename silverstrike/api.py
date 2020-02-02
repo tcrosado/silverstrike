@@ -99,6 +99,14 @@ def get_security_prices(request,security_id,dstart,dend):
 
 @login_required
 def get_investment_overview_data(request, dstart, dend):
+    def merge_dictionary(dict1, dict2):
+        dictionary_list = [dict1,dict2]
+        merged_dictionary = dict()
+        for dictionary in dictionary_list:
+            for key in dictionary.keys():
+                merged_dictionary[key] = dictionary[key]
+        return merged_dictionary
+
 
     def merge_day_operations(operation_list1, operation_list2):
         def merge_operation_list(operation_list, merged=dict()):
@@ -118,7 +126,6 @@ def get_investment_overview_data(request, dstart, dend):
 
     dstart = datetime.datetime.strptime(dstart, '%Y-%m-%d')
     dend = datetime.datetime.strptime(dend, '%Y-%m-%d')
-    dividends = InvestmentOperation.objects.filter(operation_type= InvestmentOperation.DIV, date__range=[dstart,dend]).order_by('date')
     operations = InvestmentOperation.objects.filter(date__range=[dstart, dend]).order_by('date')
     # TODO only if dend == today
     # TODO select single user
@@ -130,6 +137,9 @@ def get_investment_overview_data(request, dstart, dend):
     acc[InvestmentOperation.DIV] = dict()
     acc[InvestmentOperation.SELL] = dict()
     acc[InvestmentOperation.BUY] = dict()
+
+    quantities_dates = dict()
+    quantities = dict()
 
     for operation in operations:
         data = dict()
@@ -149,15 +159,52 @@ def get_investment_overview_data(request, dstart, dend):
 
         acc[operation.operation_type][operation.date] = data
 
+        #set quantitites
+        isin = operation.isin
+        quantities.setdefault(isin, 0)
+        if operation.operation_type == InvestmentOperation.SELL:
+            quantities[isin] -= operation.quantity
+        elif operation.operation_type == InvestmentOperation.BUY:
+            quantities[isin] += operation.quantity
+
+        quantities_dates.setdefault(operation.date,dict())
+        quantities_dates[operation.date].setdefault(isin, 0)
+        quantities_dates[operation.date][isin] = quantities[isin]
+
+    #get prices and create graph data on total value
     invested = merge_day_operations(acc[InvestmentOperation.BUY].values(), acc[InvestmentOperation.SELL].values())
     dividends = list(acc[InvestmentOperation.DIV].values())
-    total_value = 0 # based on price history (isin to ticker map)
-    print({'dividends': dividends, 'totalValue': total_value, 'invested': invested})
-    #(quantities * history price)+dividends
-    # Data cumulative dividends
-    # Label date
-    # get current quantitites and go back in time to get initial ones
-    # TODO add total value
+    total_value = [] # x (date), y (value)
+    keys = list(quantities_dates.keys())
+    merged_cumulative_quantities = dict()
+
+    for i in range(len(keys)):
+        date = keys[i]
+        if i != 0:
+            last_date = keys[i-1]
+            last_quantities = merged_cumulative_quantities[last_date]
+            current_quantities = quantities_dates[date]
+            merged_cumulative_quantities[date] = merge_dictionary(last_quantities,current_quantities)
+        else:
+            merged_cumulative_quantities[date] = quantities_dates[date]
+
+        data_point = dict()
+        data_point['x'] = date
+        for security in list(merged_cumulative_quantities[date].items()):
+            # Price
+            # TODO refactor
+            security_info = SecurityDetails.objects.filter(isin=security[0])[0]
+            delta_date = datetime.timedelta(days=5)
+            date_start_range = date - delta_date
+            security_price_list = SecurityPrice.objects.filter(ticker=security_info.ticker, date__range=[date_start_range,date]).order_by('-date')
+            security_price = security_price_list[0]
+            # TODO Different currencies
+            data_point.setdefault('y', 0)
+            data_point['y'] += security[1] * security_price.price
+        total_value.append(data_point)
+    # TODO add last point
+    # TODO not allowed buy/sell when market closed
+    # TODO change graph based on buttons
     # TODO edit operations
     # TODO Add total networth tracker
     return JsonResponse({'dividends': dividends, 'totalValue': total_value, 'invested': invested})

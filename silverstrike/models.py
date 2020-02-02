@@ -480,7 +480,7 @@ class InvestmentOperation(models.Model):
     quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.ForeignKey('Transaction', models.CASCADE,
-                                    related_name='transaction',blank=False,null=False)
+                                    related_name='transaction',  blank=False, null=False)
 
     @property
     def is_buy(self):
