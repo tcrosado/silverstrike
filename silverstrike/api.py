@@ -99,6 +99,21 @@ def get_security_prices(request,security_id,dstart,dend):
 
 @login_required
 def get_investment_overview_data(request, dstart, dend):
+    def get_total_security_prices_datapoints(quantities):
+        data_point = dict()
+        data_point['x'] = date
+        for security in list(quantities):
+            # Price
+            security_info = SecurityDetails.objects.filter(isin=security[0])[0]
+            delta_date = datetime.timedelta(days=5)
+            date_start_range = date - delta_date
+            security_price_list = SecurityPrice.objects.filter(ticker=security_info.ticker,
+                                                               date__range=[date_start_range, date]).order_by('-date')
+            security_price = security_price_list[0]
+            data_point.setdefault('y', 0)
+            data_point['y'] += security[1] * security_price.price
+        return data_point
+
     def merge_dictionary(dict1, dict2):
         dictionary_list = [dict1,dict2]
         merged_dictionary = dict()
@@ -177,7 +192,7 @@ def get_investment_overview_data(request, dstart, dend):
     total_value = [] # x (date), y (value)
     keys = list(quantities_dates.keys())
     merged_cumulative_quantities = dict()
-
+    date = None
     for i in range(len(keys)):
         date = keys[i]
         if i != 0:
@@ -188,21 +203,15 @@ def get_investment_overview_data(request, dstart, dend):
         else:
             merged_cumulative_quantities[date] = quantities_dates[date]
 
-        data_point = dict()
-        data_point['x'] = date
-        for security in list(merged_cumulative_quantities[date].items()):
-            # Price
-            # TODO refactor
-            security_info = SecurityDetails.objects.filter(isin=security[0])[0]
-            delta_date = datetime.timedelta(days=5)
-            date_start_range = date - delta_date
-            security_price_list = SecurityPrice.objects.filter(ticker=security_info.ticker, date__range=[date_start_range,date]).order_by('-date')
-            security_price = security_price_list[0]
-            # TODO Different currencies
-            data_point.setdefault('y', 0)
-            data_point['y'] += security[1] * security_price.price
+        data_point = get_total_security_prices_datapoints(merged_cumulative_quantities[date].items())
         total_value.append(data_point)
-    # TODO add last point
+
+    # add day point if not included
+    today = datetime.date.today()
+    if today not in keys:
+        data_point = get_total_security_prices_datapoints(merged_cumulative_quantities[date].items())
+        total_value.append(data_point)
+    # TODO Different currencies
     # TODO not allowed buy/sell when market closed
     # TODO change graph based on buttons
     # TODO edit operations
