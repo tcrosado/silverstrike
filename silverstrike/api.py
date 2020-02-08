@@ -139,10 +139,10 @@ def get_investment_overview_data(request, dstart, dend):
         merge = merge_operation_list(operation_list1)
         return list(merge_operation_list(operation_list2, merge).values())
 
-    dstart = datetime.datetime.strptime(dstart, '%Y-%m-%d')
-    dend = datetime.datetime.strptime(dend, '%Y-%m-%d')
+    dstart = datetime.datetime.fromtimestamp(float(dstart)/1000.0)
+    dend = datetime.datetime.fromtimestamp(float(dend)/1000.0)
+
     operations = InvestmentOperation.objects.filter(date__range=[dstart, dend]).order_by('date')
-    # TODO only if dend == today
     # TODO select single user
     current_quantities = SecurityQuantity.objects.all()
     tracked_quatities = dict()

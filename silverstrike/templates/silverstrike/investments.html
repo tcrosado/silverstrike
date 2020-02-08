@@ -13,11 +13,9 @@
 <div class="box">
   <div class="box-header">
   <div class="row text-center">
+    <button id="alltime" class="btn btn-s btn-default range-chooser">{% trans 'All time' %}</button>
     <button id="12month" class="btn btn-s btn-default range-chooser">{% trans 'Last year' %}</button>
     <button id="6month" class="btn btn-s btn-default range-chooser">{% trans 'Last 6 Months' %}</button>
-    <button id="3month" class="btn btn-s btn-default range-chooser">{% trans 'Last 3 Months' %}</button>
-    <button id="currentMonth" class="btn btn-s btn-default range-chooser">{% trans 'Current Month' %}</button>
-    <!--button id="custom" class="btn btn-s btn-default range-chooser">Custom Range</button-->
   </div>
 </div>
 </div>
@@ -172,8 +170,36 @@
 
 <script src="{% static 'vendor/js/Chart.bundle.min.js' %}"></script>
 <script>
+    var date_now = new Date()
+    var date_start = new Date()
+    date_start.setMonth(date_start.getMonth() - 12)
 
-    $.getJSON("{% url 'api_investment_overview_data' dates.0 dates.1 %}", {}, function(res, status) {
+    drawGraphic(date_start,date_now)
+
+    $("#12month").click( (event) => {
+        var date_now = new Date();
+        var date_start = new Date();
+        date_start.setMonth(date_start.getMonth() - 12);
+        drawGraphic(date_start,date_now)
+    })
+
+    $("#6month").click( (event) => {
+        var date_now = new Date();
+        var date_start = new Date();
+        date_start.setMonth(date_start.getMonth() - 6);
+        drawGraphic(date_start,date_now)
+    })
+
+    $("#alltime").click( (event) => {
+        var date_now = new Date();
+        var date_start = new Date();
+        date_start.setFullYear(date_start.getFullYear() - 10);
+        drawGraphic(date_start,date_now)
+    })
+
+    function drawGraphic(start_date,end_date) {
+        var url ="{% url 'api_investment_overview_data' 'DATE1' 'DATE2' %}".replace('DATE1',start_date.getTime()).replace('DATE2',end_date.getTime())
+        $.getJSON(url, {}, function(res, status) {
           var labelList = []
 
           res.invested.forEach(
@@ -188,7 +214,7 @@
             }
           );
           labelList.sort( (a,b) => {return a-b})
-          labelList = labelList.map( function(element) { 
+          labelList = labelList.map( function(element) {
              return new Date(element).toISOString().split('T')[0]
             })
 
@@ -252,6 +278,7 @@
               },
               data: data
             });
-    });
+        });
+    }
 </script>
 {% endblock %}
