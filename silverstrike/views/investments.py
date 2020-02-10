@@ -228,11 +228,25 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
                 for isin in securities.keys():
                     security_getter.set_security_quantity(isin, securities[isin])
                 context['region_weights'] = RegionDistributionWeightCalculator(security_getter).calculate_weights()
+                # Calculate delta regions
+                context['delta_region'] = dict()
+                for actual in context['targetWorld']:
+                    context['delta_region'][actual.region_id] = context['region_weights'][actual.region_id] - actual.allocation
+
                 asset_weights = AssetTypeWeightCalculator(security_getter).calculate_weights()
                 context['asset_weights'] = dict()
                 for (index, name) in SecurityDetails.SECURITY_TYPES:
                     context['asset_weights'][index] = asset_weights[name]
                 context['bond_weights'] = BondMaturityWeightCalculator(security_getter).calculate_weights()
+                # Calculate delta assets
+                #context['delta_assets'] = dict()
+                #for actual in context['targetAssets']:
+                #    context['delta_assets'][actual.maturity_id] = context['asset_weights'][actual.maturity_id] - actual.allocation
+                # Calculate delta maturity
+                context['delta_maturity'] = dict()
+                for actual in context['targetMaturityBonds']:
+                    context['delta_maturity'][actual.maturity_id] = context['bond_weights'][actual.maturity_id] - actual.allocation
+
                 context['security_operations'] = security_operation_list
         return self.render_to_response(context)
 

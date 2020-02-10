@@ -48,9 +48,6 @@
                  </tr>
               {% endfor %}
            </table>
-          {% if security_operations is not None %}
-            <input type="submit" class="btn btn-primary" value="Save">
-          {% endif %}
 
       </div>
     </div>
@@ -121,8 +118,13 @@
                 </tr>
                 <tr>
                     <th>{% trans 'Delta' %}</th>
-                    {% for asset in targetWorld %}
-                        <td>--,- %</td>
+                    {% if not delta_region.values %}
+                        {% for asset in targetWorld %}
+                            <td> --,- %</td>
+                        {% endfor %}
+                    {% endif %}
+                    {% for delta in delta_region.values %}
+                        <td>{{ delta | floatformat:1 }} %</td>
                     {% endfor %}
                 </tr>
             </table>
@@ -161,8 +163,13 @@
             </tr>
             <tr>
               <th>{% trans 'Delta' %}</th>
-                {% for asset in targetMaturityBonds %}
-                    <td> --,- %</td>
+                {% if not delta_maturity.values %}
+                    {% for asset in targetMaturityBonds %}
+                        <td> --,- %</td>
+                    {% endfor %}
+                {% endif %}
+                {% for delta in delta_maturity.values %}
+                    <td>{{ delta | floatformat:1 }} %</td>
                 {% endfor %}
             </tr>
             </table>
@@ -197,7 +204,10 @@
                 <td>{{ targetBond.allocation | floatformat:2 }} %</td>
             </tr>
             <tr>
-              <th>{% trans 'Delta' %}</th><td>--,- %</td><td>--,- %</td><td>--,- %</td>
+              <th>{% trans 'Delta' %}</th>
+                <td>--,- %</td>
+                <td>--,- %</td>
+                <td>--,- %</td>
             </tr>
             </table>
         </div>

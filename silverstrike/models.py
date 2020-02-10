@@ -604,6 +604,7 @@ class SecurityPrice(models.Model):
 #################################
 # Investment Target
 #################################
+# TODO add single user id
 class SecurityTypeTarget(models.Model):
     security_type = models.IntegerField(choices=SecurityDetails.SECURITY_TYPES, default=SecurityDetails.STOCK)
     allocation = models.FloatField(default=0.0)
@@ -635,7 +636,7 @@ class SecurityBondRegionTarget(models.Model):
 #################################
 # Preferences
 #################################
-
+# TODO add single user id
 class CurrencyPreference(models.Model):
     EUR = 0
     USD = 1
