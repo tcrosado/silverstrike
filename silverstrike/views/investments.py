@@ -256,10 +256,11 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         new_security_list = dict()
         #TODO enum buy sell
         if op == "buy":
-            new_security_list = self.buy_calculator(amount)
+            new_security_list = self.buy_calculator(request.user.id, amount)
         elif op == "sell":
-            print("TODO")
-            new_security_list = self.sell_calculator(amount)
+            new_security_list = self.sell_calculator(request.user.id, amount)
+        elif op == "rebalance":
+            new_security_list = self.rebalance_calculator(request.user.id, amount)
         else:
             print("Nothing to do here")
 
@@ -280,12 +281,16 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
 
         return HttpResponseRedirect(url)
 
-    def buy_calculator(self, amount):
-        investment_calculator = InvestmentCalculator()
+    def buy_calculator(self, user_id, amount):
+        investment_calculator = InvestmentCalculator(user_id)
         return investment_calculator.buy(amount)
 
-    def sell_calculator(self, amount):
-        investment_calculator = InvestmentCalculator()
+    def rebalance_calculator(self, user_id, amount):
+        investment_calculator = InvestmentCalculator(user_id)
+        return investment_calculator.rebalance(amount)
+
+    def sell_calculator(self, user_id, amount):
+        investment_calculator = InvestmentCalculator(user_id)
         return investment_calculator.sell(amount)
 
 

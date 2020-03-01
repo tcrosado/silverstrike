@@ -1,7 +1,7 @@
 import operator
 
 from silverstrike.models import SecurityDetails, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, \
-    SecurityDistribution, SecurityBondMaturity
+    SecurityDistribution, SecurityBondMaturity, CurrencyPreference
 from silverstrike.utils.AssetTypeWeightCalculator import AssetTypeWeightCalculator
 from silverstrike.utils.BondMaturityWeightCalculator import BondMaturityWeightCalculator
 from silverstrike.utils.PriceGetter import PriceGetter
@@ -12,12 +12,13 @@ from silverstrike.utils.SecurityQuantityMutableGetter import SecurityQuantityMut
 
 class InvestmentCalculator:
 
-    def __init__(self):
+    def __init__(self, user_id):
         self.price_getter = PriceGetter()
         self.security_quantity_getter = SecurityQuantityMutableGetter()
         self.region_weight_calculator = RegionDistributionWeightCalculator(self.security_quantity_getter)
         self.bond_weight_calculator = BondMaturityWeightCalculator(self.security_quantity_getter)
         self.asset_weight_calculator = AssetTypeWeightCalculator(self.security_quantity_getter)
+        self.user_id = user_id
 
     def buy(self, amount):
         added_amount = 0
@@ -30,74 +31,43 @@ class InvestmentCalculator:
             self.security_quantity_getter.set_security_quantity(isin, current_security_quantity[isin])
 
         while added_amount != amount and updated:
-            updated = False
             # select asset to add
             delta_asset_weights = self.__get_delta_asset_weights()
             selected_asset = min(delta_asset_weights, key=delta_asset_weights.get)
-            # FIXME refactor asset types
+
             if selected_asset == SecurityDetails.STOCK:
-                # get delta_region_target
-                delta_region_weights = self.__get_delta_region_weights()
-                # get min delta_region
-                selected_region = min(delta_region_weights, key=delta_region_weights.get)
-                # get security with max region
-                stock_list = SecurityDetails.objects.filter(security_type=SecurityDetails.STOCK)
-                isin_list = [stock.isin for stock in stock_list]
-                region_weight_list = SecurityDistribution.objects.filter(region_id=selected_region, isin__in=isin_list)
-                selected_isin = max(region_weight_list, key=operator.attrgetter('allocation')).isin
-
-                # get price
-                # FIXME if no price avaliable
-                price = float(self.price_getter.get_latest_prices([selected_isin])[selected_isin])
-
-                if amount >= price:
-                    added_amount = added_amount + price
-                    amount = amount - price
-                    security_quantity = self.security_quantity_getter.get_security_quantity(selected_isin)
-                    self.security_quantity_getter.set_security_quantity(selected_isin, security_quantity + 1)
-                    updated = True
-
+                selected_isin = self.__select_buy_isin(self.__get_delta_region_weights, SecurityDetails.STOCK)
             elif selected_asset == SecurityDetails.BOND:
-                # get delta_maturity_target
-                delta_maturity_weights = self.__get_delta_maturity_weights()
-                # get min delta_maturity
-                selected_maturity = min(delta_maturity_weights, key=delta_maturity_weights.get)
-
-                # get bond with max maturity
-                bond_list = SecurityDetails.objects.filter(security_type=SecurityDetails.BOND)
-                isin_list = [bond.isin for bond in bond_list]
-                maturity_weight_list = SecurityBondMaturity.objects.filter(maturity_id=selected_maturity,
-                                                                           isin__in=isin_list)
-                selected_allocaion = max(maturity_weight_list, key=operator.attrgetter('allocation'))
-                selected_isin = selected_allocaion.isin
-                # get price
-                price = float(self.price_getter.get_latest_prices([selected_isin])[selected_isin])
-                # update amount
-                if amount >= price:
-                    added_amount = added_amount + price
-                    amount = amount - price
-                    security_quantity = self.security_quantity_getter.get_security_quantity(selected_isin)
-                    self.security_quantity_getter.set_security_quantity(selected_isin, security_quantity + 1)
-                    updated = True
-
+                selected_isin = self.__select_buy_isin(self.__get_delta_maturity_weights, SecurityDetails.BOND)
             elif selected_asset == SecurityDetails.REIT:
-                # add reit asset
-                # FIXME if more than 1 REIT
-                # TODO option to not consider certain securities to be bought in the future
-                selected_security = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT)[0]
-                selected_isin = selected_security.isin
-                price = float(self.price_getter.get_latest_prices([selected_isin])[selected_isin])
+                try:
+                    currency = CurrencyPreference.objects.get(user=self.user_id)
+                    iso_currency = CurrencyPreference.CURRENCIES[currency.preferred_currency][1]
+                except CurrencyPreference.DoesNotExist:
+                    currency = None
 
-                if amount >= price:
-                    added_amount = added_amount + price
-                    amount = amount - price
-                    security_quantity = self.security_quantity_getter.get_security_quantity(selected_isin)
-                    self.security_quantity_getter.set_security_quantity(selected_isin, security_quantity + 1)
-                    updated = True
+                if currency is None:
+                    selected_security_list = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT)
+                else:
+                    selected_security_list = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT, currency=iso_currency)
+                if len(selected_security_list) != 0:
+                    raise Exception("Impossible to use REIT")
+                selected_security = selected_security_list[0]
+                selected_isin = selected_security.isin
             else:
                 raise Exception("Unknown asset selected")
 
+            added_amount, amount, updated = self.__update_quantities(selected_isin, added_amount, amount)
         return self.security_quantity_getter.get_quantities()
+
+    @staticmethod
+    def __get_weight_list(security_type, selected_delta, isin_list):
+        if security_type == SecurityDetails.STOCK:
+            return SecurityDistribution.objects.filter(region_id=selected_delta, isin__in=isin_list)
+        elif security_type == SecurityDetails.BOND:
+            return SecurityBondMaturity.objects.filter(maturity_id=selected_delta, isin__in=isin_list)
+        else:
+            return []
 
     # TODO refactor deltas
     def __get_delta_asset_weights(self):
@@ -125,16 +95,43 @@ class InvestmentCalculator:
         maturity_weights = self.bond_weight_calculator.calculate_weights()
         maturity_targets = SecurityBondMaturityTarget.objects.all()
         delta_maturity_weights = dict()
-
         for target in maturity_targets:
             delta_maturity_weights[target.maturity_id] = maturity_weights.get(target.maturity_id, 0) - target.allocation
 
         return delta_maturity_weights
 
+    def __update_quantities(self, selected_isin, added_amount, amount):
+        updated = False
+        # get price
+        # FIXME if no price avaliable
+        price = float(self.price_getter.get_latest_prices([selected_isin])[selected_isin])
+
+        if amount >= price:
+            added_amount = added_amount + price
+            amount = amount - price
+            security_quantity = self.security_quantity_getter.get_security_quantity(selected_isin)
+            self.security_quantity_getter.set_security_quantity(selected_isin, security_quantity + 1)
+            updated = True
+
+        return added_amount, amount, updated
+
+    @staticmethod
+    def __select_buy_isin(delta_weight_function, security_type):
+        # get delta_region_target
+        delta_weights = delta_weight_function()
+        # get min delta
+        selected_delta = min(delta_weights, key=delta_weights.get)
+        # get security with max region
+        asset_list = SecurityDetails.objects.filter(security_type=security_type)
+        isin_list = [asset.isin for asset in asset_list]
+        weight_list = InvestmentCalculator.__get_weight_list(security_type, selected_delta, isin_list)
+        selected_isin = max(weight_list, key=operator.attrgetter('allocation')).isin
+        return selected_isin
+
     def sell(self, amount):
         # TODO
         raise NotImplementedError
 
-    def rebalance(self):
+    def rebalance(self, amount):
         # TODO
         raise NotImplementedError
