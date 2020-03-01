@@ -2,7 +2,6 @@ import decimal
 from datetime import date, datetime
 from urllib.parse import urlencode
 
-
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -195,9 +194,7 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'investment-calculator'
-        context['targetStock'] = SecurityTypeTarget.objects.get(security_type=SecurityDetails.STOCK)
-        context['targetREIT'] = SecurityTypeTarget.objects.get(security_type=SecurityDetails.REIT)
-        context['targetBond'] = SecurityTypeTarget.objects.get(security_type=SecurityDetails.BOND)
+        context['target_assets'] = SecurityTypeTarget.objects.all()
         context['regionList'] = SecurityDistribution.REGIONS
         context['bondMaturityList'] = SecurityBondMaturity.MATURITY
         context['targetWorld'] = SecurityRegionTarget.objects.all()
@@ -212,7 +209,7 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
             # TODO set operation on html select
             # TODO set loader on calc
             # TODO save button
-                # TODO edit Operations/ Tx
+            # TODO edit Operations/ Tx
             # TODO add balance to investment Operations
             # TODO dont assume dictionaries are ordered (template)
             context['amount'] = float(data.pop('amount')[0])
@@ -231,7 +228,8 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
                 # Calculate delta regions
                 context['delta_region'] = dict()
                 for actual in context['targetWorld']:
-                    context['delta_region'][actual.region_id] = context['region_weights'][actual.region_id] - actual.allocation
+                    context['delta_region'][actual.region_id] = context['region_weights'][
+                                                                    actual.region_id] - actual.allocation
 
                 asset_weights = AssetTypeWeightCalculator(security_getter).calculate_weights()
                 context['asset_weights'] = dict()
@@ -239,13 +237,16 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
                     context['asset_weights'][index] = asset_weights[name]
                 context['bond_weights'] = BondMaturityWeightCalculator(security_getter).calculate_weights()
                 # Calculate delta assets
-                #context['delta_assets'] = dict()
-                #for actual in context['targetAssets']:
-                #    context['delta_assets'][actual.maturity_id] = context['asset_weights'][actual.maturity_id] - actual.allocation
+                context['delta_assets'] = dict()
+
+                for actual, index in zip(context['target_assets'], range(len(context['target_assets']))):
+                    context['delta_assets'][index] = context['asset_weights'][index] - actual.allocation
+
                 # Calculate delta maturity
                 context['delta_maturity'] = dict()
                 for actual in context['targetMaturityBonds']:
-                    context['delta_maturity'][actual.maturity_id] = context['bond_weights'][actual.maturity_id] - actual.allocation
+                    context['delta_maturity'][actual.maturity_id] = context['bond_weights'][
+                                                                        actual.maturity_id] - actual.allocation
 
                 context['security_operations'] = security_operation_list
         return self.render_to_response(context)
@@ -254,7 +255,7 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         amount = float(request.POST.get('amount'))
         op = request.POST.get('select')
         new_security_list = dict()
-        #TODO enum buy sell
+        # TODO enum buy sell
         if op == "buy":
             new_security_list = self.buy_calculator(request.user.id, amount)
         elif op == "sell":

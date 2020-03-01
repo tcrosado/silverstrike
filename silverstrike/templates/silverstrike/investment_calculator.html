@@ -188,8 +188,7 @@
             </tr>
             <tr>
               <th>{% trans 'New' %}</th>
-                {% if not region_weights.values %}
-                <!-- TODO -->
+                {% if not asset_weights.values %}
                 <td>--,- %</td><td>--,- %</td><td>--,- %</td>
                 {% endif %}
                 {% for weight in asset_weights.values %}
@@ -199,15 +198,21 @@
             </tr>
             <tr>
               <th>{% trans 'Target' %}</th>
-                <td>{{ targetStock.allocation | floatformat:2 }} %</td>
-                <td>{{ targetREIT.allocation | floatformat:2 }} %</td>
-                <td>{{ targetBond.allocation | floatformat:2 }} %</td>
+                {% if not target_assets %}
+                <td>--,- %</td><td>--,- %</td><td>--,- %</td>
+                {% endif %}
+                {% for target in target_assets %}
+                    <td> {{target.allocation | floatformat:1}} %</td>
+                {% endfor %}
             </tr>
             <tr>
               <th>{% trans 'Delta' %}</th>
-                <td>--,- %</td>
-                <td>--,- %</td>
-                <td>--,- %</td>
+                {% if not delta_assets %}
+                <td>--,- %</td><td>--,- %</td><td>--,- %</td>
+                {% endif %}
+                {% for target in delta_assets.values %}
+                    <td> {{target | floatformat:1}} %</td>
+                {% endfor %}
             </tr>
             </table>
         </div>
