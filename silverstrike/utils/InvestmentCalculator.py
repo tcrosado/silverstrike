@@ -50,14 +50,14 @@ class InvestmentCalculator:
                     selected_security_list = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT)
                 else:
                     selected_security_list = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT, currency=iso_currency)
-                if len(selected_security_list) != 0:
+                if len(selected_security_list) == 0:
                     raise Exception("Impossible to use REIT")
                 selected_security = selected_security_list[0]
                 selected_isin = selected_security.isin
             else:
                 raise Exception("Unknown asset selected")
 
-            added_amount, amount, updated = self.__update_quantities(selected_isin, added_amount, amount)
+            added_amount, amount, updated = self.__update_quantities("buy",selected_isin, added_amount, amount)
         return self.security_quantity_getter.get_quantities()
 
     @staticmethod
@@ -69,7 +69,6 @@ class InvestmentCalculator:
         else:
             return []
 
-    # TODO refactor deltas
     def __get_delta_asset_weights(self):
         asset_weights = self.asset_weight_calculator.calculate_weights()
         asset_targets = SecurityTypeTarget.objects.all()  # FIXME single user
@@ -100,7 +99,7 @@ class InvestmentCalculator:
 
         return delta_maturity_weights
 
-    def __update_quantities(self, selected_isin, added_amount, amount):
+    def __update_quantities(self, operation, selected_isin, added_amount, amount):
         updated = False
         # get price
         # FIXME if no price avaliable
@@ -110,7 +109,10 @@ class InvestmentCalculator:
             added_amount = added_amount + price
             amount = amount - price
             security_quantity = self.security_quantity_getter.get_security_quantity(selected_isin)
-            self.security_quantity_getter.set_security_quantity(selected_isin, security_quantity + 1)
+            if operation == "buy":
+                self.security_quantity_getter.set_security_quantity(selected_isin, security_quantity + 1)
+            elif operation == "sell":
+                self.security_quantity_getter.set_security_quantity(selected_isin, security_quantity - 1)
             updated = True
 
         return added_amount, amount, updated
@@ -121,16 +123,71 @@ class InvestmentCalculator:
         delta_weights = delta_weight_function()
         # get min delta
         selected_delta = min(delta_weights, key=delta_weights.get)
-        # get security with max region
+        # get security with max region / maturity
         asset_list = SecurityDetails.objects.filter(security_type=security_type)
         isin_list = [asset.isin for asset in asset_list]
         weight_list = InvestmentCalculator.__get_weight_list(security_type, selected_delta, isin_list)
         selected_isin = max(weight_list, key=operator.attrgetter('allocation')).isin
         return selected_isin
 
+    def __select_sell_isin(self, delta_weight_function, security_type):
+        # get delta_region_target
+        delta_weights = delta_weight_function()
+        # get max delta
+        selected_delta = max(delta_weights, key=delta_weights.get)
+        # get current
+        current_assets = self.security_quantity_getter.get_quantities()
+        current_assets_isin = current_assets.keys()
+        # get security with max region
+        asset_list = SecurityDetails.objects.filter(security_type=security_type, isin__in=current_assets_isin)
+        isin_list = [asset.isin for asset in asset_list]
+        weight_list = InvestmentCalculator.__get_weight_list(security_type, selected_delta, isin_list)
+        selected_isin = max(weight_list, key=operator.attrgetter('allocation')).isin
+        return selected_isin
+
     def sell(self, amount):
-        # TODO
-        raise NotImplementedError
+        sold_amount = 0
+        updated = True
+
+        # Set current security quantities
+        self.security_quantity_getter.clear_list()
+        current_security_quantity = SecurityQuantityGetter().get_quantities()
+        for isin in current_security_quantity.keys():
+            self.security_quantity_getter.set_security_quantity(isin, current_security_quantity[isin])
+
+        while sold_amount != amount and updated:
+            # select asset to add
+            delta_asset_weights = self.__get_delta_asset_weights()
+            selected_asset = max(delta_asset_weights, key=delta_asset_weights.get)
+
+            if selected_asset == SecurityDetails.STOCK:
+                selected_isin = self.__select_sell_isin(self.__get_delta_region_weights, SecurityDetails.STOCK)
+            elif selected_asset == SecurityDetails.BOND:
+                selected_isin = self.__select_sell_isin(self.__get_delta_maturity_weights, SecurityDetails.BOND)
+            elif selected_asset == SecurityDetails.REIT:
+                # Selling prefer reducing position on less assets exchange
+                # Selling prefer foreign currency
+                # TODO
+                try:
+                    currency = CurrencyPreference.objects.get(user=self.user_id)
+                    iso_currency = CurrencyPreference.CURRENCIES[currency.preferred_currency][1]
+                except CurrencyPreference.DoesNotExist:
+                    currency = None
+
+                if currency is None:
+                    selected_security_list = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT)
+                else:
+                    selected_security_list = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT,
+                                                                            currency=iso_currency)
+                if len(selected_security_list) == 0:
+                    raise Exception("Impossible to use REIT")
+                selected_security = selected_security_list[0]
+                selected_isin = selected_security.isin
+            else:
+                raise Exception("Unknown asset selected")
+
+            sold_amount, amount, updated = self.__update_quantities("sell", selected_isin, sold_amount, amount)
+        return self.security_quantity_getter.get_quantities()
 
     def rebalance(self, amount):
         # TODO
