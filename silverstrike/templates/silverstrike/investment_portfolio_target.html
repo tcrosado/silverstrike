@@ -71,7 +71,7 @@
        <table class="table table-striped">
           <tr>
             <th></th>
-            {% for maturity in targetMaturityBonds.0.MATURITY %}
+            {% for maturity in bondMaturityList %}
                 <th>{{ maturity.1}}</th>
             {% endfor %}
             {% for region in targetRegionBonds.0.REGIONS %}
@@ -91,7 +91,7 @@
         </tr>
            <tr>
             <th>{% trans 'Actual' %}</th>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
@@ -104,7 +104,7 @@
         </tr>
            <tr>
             <th>{% trans 'Delta' %}</th>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
@@ -142,7 +142,7 @@
           <tr>
             <th>{% trans 'Actual' %}</th>
             <td>0</td>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
@@ -157,7 +157,7 @@
           <tr>
             <th>{% trans 'Delta' %}</th>
             <td>0</td>
-            <td>0</td>
+            <td>0</td> <!-- TODO -->
             <td>0</td>
             <td>0</td>
             <td>0</td>
@@ -170,6 +170,26 @@
             <td>0</td>
         </tr>
        </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="col-md-12">
+  <div class="box">
+    <div class="box-header">
+      <h3 class="box-title">Currency Configuration</h3>
+    </div>
+    <div class="box-body">
+        <a class="btn btn-primary pull-right" id="btn-apply" href="{% url 'investment_config_update' %}">Edit Configuration</a>
+       <div class="col-md-4">
+            <table class="table table-striped">
+               <tr>
+                   <th>{% trans 'Default Currency' %}</th>
+                   <td>{{ defaultCurrency }}</td>
+               </tr>
+           </table>
+       </div>
     </div>
   </div>
 </div>
