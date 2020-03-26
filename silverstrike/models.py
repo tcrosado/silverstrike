@@ -462,6 +462,28 @@ class RecurringTransaction(models.Model):
         return outstanding
 
 
+
+class SecurityDetails(models.Model):
+    STOCK = 0
+    REIT = 1
+    BOND = 2
+    SECURITY_TYPES = (
+        (STOCK, 'Stock'),
+        (REIT, 'REIT'),
+        (BOND, 'Bond')
+    )
+
+    isin = models.CharField(max_length=12,primary_key=True)
+    name = models.CharField(max_length=64)
+    ticker = models.CharField(max_length=64)
+    exchange = models.CharField(max_length=64)
+    currency = models.CharField(max_length=3)
+    security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK)
+    ter = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return self.name
+
 class InvestmentOperation(models.Model):
     BUY = 0
     SELL = 1
@@ -475,7 +497,7 @@ class InvestmentOperation(models.Model):
     date = models.DateField(default=date.today)
     account = models.ForeignKey(Account, models.CASCADE, related_name='investment_transactions')
     operation_type = models.IntegerField(choices=OPERATION_TYPES, default=BUY)
-    isin = models.CharField(max_length=12)  # FIXME
+    security = models.ForeignKey(SecurityDetails, models.SET_DEFAULT, related_name='security_isin', blank=False, null=False, default="NO_ISIN")
     category = models.CharField(max_length=64, null=True)  # FIXME
     quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -506,27 +528,8 @@ class SecuritySale(models.Model):
 
 class SecurityQuantity(models.Model):
     account = models.ForeignKey(Account, models.CASCADE)
-    isin = models.CharField(max_length=12)
+    security = models.ForeignKey(SecurityDetails, models.SET_DEFAULT, related_name='asset_isin', blank=False, null=False, default="NO_ISIN")
     quantity = models.IntegerField(default=0)
-
-
-class SecurityDetails(models.Model):
-    STOCK = 0
-    REIT = 1
-    BOND = 2
-    SECURITY_TYPES = (
-        (STOCK, 'Stock'),
-        (REIT, 'REIT'),
-        (BOND, 'Bond')
-    )
-
-    isin = models.CharField(max_length=12)
-    name = models.CharField(max_length=64)
-    ticker = models.CharField(max_length=64)
-    exchange = models.CharField(max_length=64)
-    currency = models.CharField(max_length=3)
-    security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK)
-    ter = models.FloatField(default=0.0)
 
 
 class SecurityDistribution(models.Model):
@@ -559,9 +562,9 @@ class SecurityDistribution(models.Model):
     )
 
     class Meta:
-        unique_together = (('isin', 'region_id'),)
+        unique_together = (('security', 'region_id'),)
 
-    isin = models.CharField(max_length=12)
+    security = models.ForeignKey(SecurityDetails, models.CASCADE, related_name='security_id', blank=False, null=False,default="NO_ISIN")
     allocation = models.FloatField(default=0.0)
     region_id = models.IntegerField(choices=REGIONS, default=EZ)
 
@@ -588,9 +591,9 @@ class SecurityBondMaturity(models.Model):
     )
 
     class Meta:
-        unique_together = (('isin', 'maturity_id'),)
+        unique_together = (('security', 'maturity_id'),)
 
-    isin = models.CharField(max_length=12)
+    security = models.ForeignKey(SecurityDetails, models.CASCADE, related_name='security_bond_id', blank=False, null=False,default="NO_ISIN")
     allocation = models.FloatField(default=0.0)
     maturity_id = models.IntegerField(choices=MATURITY, default=F1T3)
 

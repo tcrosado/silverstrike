@@ -16,7 +16,7 @@ class InvestmentWeightCalculator(ABC):
 
     @staticmethod
     def __get_type(isin):
-        security = SecurityDetails.objects.get(isin=isin)
+        security = SecurityDetails.objects.get(pk=isin)
         return SecurityDetails.SECURITY_TYPES[security.security_type][1]
 
     def calculate_weights(self):

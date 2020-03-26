@@ -247,12 +247,12 @@ class ExportForm(forms.Form):
 class InvestmentOperationForm(forms.ModelForm):
     class Meta:
         model = models.InvestmentOperation
-        fields = [ 'account', 'isin', 'quantity', 'date', 'price', 'category',
+        fields = [ 'account', 'security', 'quantity', 'date', 'price', 'category',
                   'operation_type']
 
     account = forms.ModelChoiceField(queryset=models.Account.objects.filter(
         account_type=models.Account.PERSONAL, active=True))
-    isin = forms.CharField()
+    security = forms.ModelChoiceField(queryset=models.SecurityDetails.objects.all())
     quantity = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     # price or amount
     price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
@@ -268,14 +268,12 @@ class InvestmentOperationForm(forms.ModelForm):
         operation_type = self.cleaned_data['operation_type']
         unit_price = self.cleaned_data['price']
         quantity = self.cleaned_data['quantity']
-        isin = self.cleaned_data['isin']
+        security = self.cleaned_data['security']
         total_price = quantity * unit_price
         date = self.cleaned_data['date']
-        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['isin'])+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
+        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['security'].ticker)+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
 
         transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
-        
-
         if operation_type == str(models.InvestmentOperation.BUY):
             origin_acount = src
             destination_account = dst
@@ -284,25 +282,25 @@ class InvestmentOperationForm(forms.ModelForm):
                 raise forms.ValidationError("Not enough Funds")
 
             try:
-                securityQuantity = models.SecurityQuantity.objects.get(account=src, isin=isin)
+                securityQuantity = models.SecurityQuantity.objects.get(account=src, security=security)
                 securityQuantity.quantity = securityQuantity.quantity + quantity
                 securityQuantity.save()
             except ObjectDoesNotExist:
-                models.SecurityQuantity.objects.create(account = src, isin= isin, quantity = quantity)
+                models.SecurityQuantity.objects.create(account = src, security= security, quantity = quantity)
 
         elif operation_type == str(models.InvestmentOperation.SELL):
             origin_acount = dst
             destination_account = src
 
             try:
-                securityQuantity = models.SecurityQuantity.objects.get(account=src,isin=isin)
+                securityQuantity = models.SecurityQuantity.objects.get(account=src,security=security)
 
                 if securityQuantity.quantity < quantity:
                     raise forms.ValidationError("The account does not own that many securities")
 
                 securityQuantity.quantity = securityQuantity.quantity - quantity
 
-                orders = models.InvestmentOperation.objects.filter(account = src,isin = isin,operation_type = InvestmentOperation.BUY).order_by('date')
+                orders = models.InvestmentOperation.objects.filter(account = src,security = security,operation_type = InvestmentOperation.BUY).order_by('date')
                 already_sold = 0
                 for order in orders:
                     if already_sold == quantity:
@@ -338,7 +336,7 @@ class InvestmentOperationForm(forms.ModelForm):
             origin_acount = dst
             destination_account = src
             try:
-                securityQuantity = models.SecurityQuantity.objects.get(account=src, isin=isin)
+                securityQuantity = models.SecurityQuantity.objects.get(account=src, security =security)
                 if securityQuantity.quantity < quantity:
                     raise forms.ValidationError("The account does not own that many securities")
             except ObjectDoesNotExist:
@@ -349,7 +347,7 @@ class InvestmentOperationForm(forms.ModelForm):
         investmentOperation = models.InvestmentOperation.objects.create(date=date,
                                                                         price=unit_price, account=src,
                                                                         operation_type=operation_type,
-                                                                        isin=isin, category=category, quantity=quantity,
+                                                                        security=security, category=category, quantity=quantity,
                                                                         transaction_id=transaction)
 
         models.Split.objects.update_or_create(

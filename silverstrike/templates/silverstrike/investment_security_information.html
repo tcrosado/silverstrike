@@ -115,7 +115,7 @@
        </table>
     </div>
     <div class="box-footer">
-      <a href="{% url 'investment_security_update' securityDetails.id %}" class="btn btn-primary">{% trans 'Edit' %}</a>
+      <a href="{% url 'investment_security_update' securityDetails.isin %}" class="btn btn-primary">{% trans 'Edit' %}</a>
 
     </div>
   </div>
@@ -153,7 +153,7 @@
        </table>
     </div>
     <div class="box-footer">
-        <a href="{% url 'investment_security_distribution' securityDetails.id %}" class="btn btn-primary">{% trans 'Edit' %}</a>
+        <a href="{% url 'investment_security_distribution' securityDetails.isin %}" class="btn btn-primary">{% trans 'Edit' %}</a>
     </div>
   </div>
 
@@ -232,7 +232,7 @@
     });
   });
 
-  $.getJSON("{% url 'api_security_prices' securityDetails.id dates.0 dates.1 %}", {}, function(res, status) {
+  $.getJSON("{% url 'api_security_prices' securityDetails.isin dates.0 dates.1 %}", {}, function(res, status) {
   var ytd_return = document.getElementById("ytd_return");
   ret = ((res.data[res.data.length - 1] - res.data[0]) / res.data[0]).toFixed(4)*100;
   ytd_return.innerText = ret+" %";

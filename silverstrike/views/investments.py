@@ -65,8 +65,8 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         def get_security_type_name(index):
             return SecurityDetails.SECURITY_TYPES[index][1]
 
-        for security in quantities:
-            securityQuant[security.isin] = security.quantity
+        for quantity in quantities:
+            securityQuant[quantity.security.isin] = quantity.quantity
 
         stocks = SecurityDetails.objects.filter(security_type=SecurityDetails.STOCK, isin__in=securityQuant.keys())
         reit = SecurityDetails.objects.filter(security_type=SecurityDetails.REIT, isin__in=securityQuant.keys())
@@ -98,8 +98,8 @@ class InvestmentView(LoginRequiredMixin, generic.TemplateView):
         operations = InvestmentOperation.objects.exclude(id__in=ids).filter(operation_type=InvestmentOperation.BUY)
 
         for operation in operations:
-            quantityOwned[operation.isin] = quantityOwned.get(operation.isin, 0) + operation.quantity
-            valuePayed[operation.isin] = valuePayed.get(operation.isin, 0) + (operation.price * operation.quantity)
+            quantityOwned[operation.security.isin] = quantityOwned.get(operation.security.isin, 0) + operation.quantity
+            valuePayed[operation.security.isin] = valuePayed.get(operation.security.isin, 0) + (operation.price * operation.quantity)
 
         for isin in quantityOwned.keys():
             securityAveragePrices[isin] = valuePayed[isin] / quantityOwned[isin]
@@ -207,11 +207,13 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         if len(data.keys()) != 0:
             # TODO check amount and operation exists
             # TODO set operation on html select
-            # TODO set loader on calc
             # TODO save button
             # TODO edit Operations/ Tx
             # TODO add balance to investment Operations
             # TODO dont assume dictionaries are ordered (template)
+            # TODO get current price security info
+            # TODO get last operations security info
+            # TODO add currency to price on operation list
             context['amount'] = float(data.pop('amount')[0])
             context['operation'] = data.pop('operation')[0]
             if len(data.keys()) != 0:
@@ -521,17 +523,17 @@ class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # 
                 continue
             try:
                 if security.security_type == SecurityDetails.BOND:
-                    dist = data_class.objects.get(isin=security.isin, maturity_id=int(key))
+                    dist = data_class.objects.get(security=security, maturity_id=int(key))
                 else:
-                    dist = data_class.objects.get(isin=security.isin, region_id=int(key))
+                    dist = data_class.objects.get(security=security, region_id=int(key))
                 dist.allocation = float(request_data[key][0])
                 dist.save()
             except data_class.DoesNotExist:
                 if security.security_type == SecurityDetails.BOND:
-                    data_class.objects.create(isin=security.isin, maturity_id=int(key),
+                    data_class.objects.create(security=security, maturity_id=int(key),
                                               allocation=float(request_data[key][0]))
                 else:
-                    data_class.objects.create(isin=security.isin, region_id=int(key),
+                    data_class.objects.create(security=security, region_id=int(key),
                                               allocation=float(request_data[key][0]))
         return HttpResponseRedirect(reverse('investment_security_details', args=[security_id]))
 
@@ -553,7 +555,7 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
 
         context['dates'] = [begining.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d")]
         try:
-            assets = SecurityQuantity.objects.get(isin=context['securityDetails'].isin).quantity
+            assets = SecurityQuantity.objects.get(security=context['securityDetails']).quantity
         except SecurityQuantity.DoesNotExist:
             assets = 0
         context['currentAssets'] = assets
@@ -563,10 +565,10 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
             context['totalPrice'] = last_price.price * assets
         if context['securityDetails'].security_type == SecurityDetails.BOND:
             context['distributionLabels'] = [element[1] for element in SecurityBondMaturity.MATURITY]
-            context['securityDistribution'] = SecurityBondMaturity.objects.filter(isin=context['securityDetails'].isin)
+            context['securityDistribution'] = SecurityBondMaturity.objects.filter(security=context['securityDetails'])
         else:
             context['distributionLabels'] = [element[1] for element in SecurityDistribution.REGIONS]
-            context['securityDistribution'] = SecurityDistribution.objects.filter(isin=context['securityDetails'].isin)
+            context['securityDistribution'] = SecurityDistribution.objects.filter(security=context['securityDetails'])
         price_distribution = []
         for region in context['securityDistribution']:
             price_distribution.append(context['totalPrice'] * decimal.Decimal(region.allocation / 100))

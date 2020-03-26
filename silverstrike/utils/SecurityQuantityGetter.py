@@ -13,6 +13,9 @@ class SecurityQuantityGetter:
         quantities = self.security_quantity.objects.all()
         security_quantities = dict()
 
-        for security in quantities:
-            security_quantities[security.isin] = security.quantity
+        for security_quantity in quantities:
+            isin = security_quantity.security.isin # FIXME use reference as here
+            security_quantities[isin] = security_quantity.quantity
         return security_quantities
+        #TODO test Bond and REIT
+    #TODO CronJob price update

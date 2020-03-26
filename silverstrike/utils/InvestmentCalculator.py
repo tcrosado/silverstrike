@@ -61,11 +61,11 @@ class InvestmentCalculator:
         return self.security_quantity_getter.get_quantities()
 
     @staticmethod
-    def __get_weight_list(security_type, selected_delta, isin_list):
+    def __get_weight_list(security_type, selected_delta, security_list):
         if security_type == SecurityDetails.STOCK:
-            return SecurityDistribution.objects.filter(region_id=selected_delta, isin__in=isin_list)
+            return SecurityDistribution.objects.filter(region_id=selected_delta, security__in=security_list)
         elif security_type == SecurityDetails.BOND:
-            return SecurityBondMaturity.objects.filter(maturity_id=selected_delta, isin__in=isin_list)
+            return SecurityBondMaturity.objects.filter(maturity_id=selected_delta, security__in=security_list)
         else:
             return []
 
@@ -125,9 +125,8 @@ class InvestmentCalculator:
         selected_delta = min(delta_weights, key=delta_weights.get)
         # get security with max region / maturity
         asset_list = SecurityDetails.objects.filter(security_type=security_type)
-        isin_list = [asset.isin for asset in asset_list]
-        weight_list = InvestmentCalculator.__get_weight_list(security_type, selected_delta, isin_list)
-        selected_isin = max(weight_list, key=operator.attrgetter('allocation')).isin
+        weight_list = InvestmentCalculator.__get_weight_list(security_type, selected_delta, asset_list)
+        selected_isin = max(weight_list, key=operator.attrgetter('allocation')).security.isin
         return selected_isin
 
     def __select_sell_isin(self, delta_weight_function, security_type):
@@ -140,9 +139,8 @@ class InvestmentCalculator:
         current_assets_isin = current_assets.keys()
         # get security with max region
         asset_list = SecurityDetails.objects.filter(security_type=security_type, isin__in=current_assets_isin)
-        isin_list = [asset.isin for asset in asset_list]
-        weight_list = InvestmentCalculator.__get_weight_list(security_type, selected_delta, isin_list)
-        selected_isin = max(weight_list, key=operator.attrgetter('allocation')).isin
+        weight_list = InvestmentCalculator.__get_weight_list(security_type, selected_delta, asset_list)
+        selected_isin = max(weight_list, key=operator.attrgetter('allocation')).security.isin
         return selected_isin
 
     def sell(self, amount):

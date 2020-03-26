@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from silverstrike.models import SecurityDetails, SecurityQuantity
 from silverstrike.utils.PriceGetter import PriceGetter
 
@@ -15,7 +17,10 @@ class SecurityOperationCalculationAdapter:
             operation = ""
             ticker = security_detail.ticker
             isin = security_detail.isin
-            current_quantity = SecurityQuantity.objects.get(isin=isin).quantity
+            try:
+                current_quantity = SecurityQuantity.objects.get(security=security_detail).quantity
+            except ObjectDoesNotExist:
+                current_quantity = 0
             price = PriceGetter().get_latest_prices([isin])[isin]
             #TODO check last price is on
             new_quantity = self.security_list[isin]

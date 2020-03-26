@@ -9,8 +9,8 @@ class RegionDistributionWeightCalculator(InvestmentWeightCalculator):
         stock_weight_regions = dict()
         total_value = 0.0
         quantities = self._InvestmentWeightCalculator__get_security_quantities()
-        security_distribution = SecurityDistribution.objects.filter(isin__in=quantities.keys())
-        prices = self.priceGetter.get_latest_prices([security.isin for security in security_distribution])
+        security_distribution = SecurityDistribution.objects.filter(security__in=quantities.keys())
+        prices = self.priceGetter.get_latest_prices([distribution.security.isin for distribution in security_distribution])
 
         # Get total money on bonds
         for isin in prices.keys():
@@ -20,7 +20,7 @@ class RegionDistributionWeightCalculator(InvestmentWeightCalculator):
         for dist in security_distribution:
 
             total_region = total_money_region.get(dist.region_id)
-            total = float(security_totals[dist.isin]) * float(dist.allocation / 100)
+            total = float(security_totals[dist.security.isin]) * float(dist.allocation / 100)
             if total_region is None:
                 total_money_region[dist.region_id] = total
             else:
@@ -31,7 +31,7 @@ class RegionDistributionWeightCalculator(InvestmentWeightCalculator):
             if total_money_region[dist.region_id] == 0:
                 allocation = 0
             else:
-                allocation = float(security_totals[dist.isin]) * float(dist.allocation) / total_value
+                allocation = float(security_totals[dist.security.isin]) * float(dist.allocation) / total_value
 
             if total_region is None:
                 stock_weight_regions[dist.region_id] = allocation
