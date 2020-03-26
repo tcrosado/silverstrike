@@ -1,4 +1,5 @@
 # Django
+db.sqlite3.old
 db.sqlite3
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -109,3 +110,5 @@ coverage
 .vscode
 
 demo/db\.sqlite3\.stable
+
+demo/

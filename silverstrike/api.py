@@ -82,10 +82,10 @@ def category_spending(request, dstart, dend):
 
 
 @login_required
-def get_security_prices(request,security_id,dstart,dend):
+def get_security_prices(request,isin,dstart,dend):
     dstart = datetime.datetime.strptime(dstart, '%Y-%m-%d')
     dend = datetime.datetime.strptime(dend, '%Y-%m-%d')
-    security = SecurityDetails.objects.get(id=security_id)
+    security = SecurityDetails.objects.get(isin=isin)
     res = SecurityPrice.objects.filter(ticker=security.ticker,date__range=[dstart,dend])
     data = []
     labels = []

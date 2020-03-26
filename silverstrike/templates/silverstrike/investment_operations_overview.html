@@ -37,7 +37,7 @@
     <th>{% trans 'Date' %}</th>
     <th>{% trans 'Type' %}</th>
     <th>{% trans 'Category' %}</th>
-    <th class="hidden-xs">{% trans 'ISIN' %}</th>
+    <th class="hidden-xs">{% trans 'Ticker' %}</th>
     <th>{% trans 'Amount' %}</th>
     <th class="hidden-xs">{% trans 'Price' %}</th>
   </tr>
@@ -46,7 +46,7 @@
   <td>{{ transaction.date }}</td>
   <td>{{ transaction.operation_name }}</td>
   <td>{{ transaction.category }}</td>
-  <td>{{ transaction.isin }}</td>
+  <td>{{ transaction.security.ticker }}</td>
   <td>{{ transaction.quantity }}</td>
   <td>{{ transaction.price }}</td>
 
