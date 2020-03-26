@@ -13,20 +13,15 @@
 <div class="box">
   <div class="box-header">
   <div class="row text-center">
+    <button id="alltime" class="btn btn-s btn-default range-chooser">{% trans 'All time' %}</button>
     <button id="12month" class="btn btn-s btn-default range-chooser">{% trans 'Last year' %}</button>
     <button id="6month" class="btn btn-s btn-default range-chooser">{% trans 'Last 6 Months' %}</button>
-    <button id="3month" class="btn btn-s btn-default range-chooser">{% trans 'Last 3 Months' %}</button>
-    <button id="currentMonth" class="btn btn-s btn-default range-chooser">{% trans 'Current Month' %}</button>
-    <!--button id="custom" class="btn btn-s btn-default range-chooser">Custom Range</button-->
   </div>
 </div>
 </div>
 <div class="row">
 <div class="col-md-8">
 <div class="box">
-  <div class="box-header">
-    <h3 class="box-title">Cens</h3>
-  </div>
   <div class="box-body">
     <canvas id="balanceChart" width="400" height="200"></canvas>
   </div>
@@ -170,5 +165,120 @@
   </div>
 </div>
 {% endfor %}
+{% endblock %}
+{% block scripts %}
 
+<script src="{% static 'vendor/js/Chart.bundle.min.js' %}"></script>
+<script>
+    var date_now = new Date()
+    var date_start = new Date()
+    date_start.setMonth(date_start.getMonth() - 12)
+
+    drawGraphic(date_start,date_now)
+
+    $("#12month").click( (event) => {
+        var date_now = new Date();
+        var date_start = new Date();
+        date_start.setMonth(date_start.getMonth() - 12);
+        drawGraphic(date_start,date_now)
+    })
+
+    $("#6month").click( (event) => {
+        var date_now = new Date();
+        var date_start = new Date();
+        date_start.setMonth(date_start.getMonth() - 6);
+        drawGraphic(date_start,date_now)
+    })
+
+    $("#alltime").click( (event) => {
+        var date_now = new Date();
+        var date_start = new Date();
+        date_start.setFullYear(date_start.getFullYear() - 10);
+        drawGraphic(date_start,date_now)
+    })
+
+    function drawGraphic(start_date,end_date) {
+        var url ="{% url 'api_investment_overview_data' 'DATE1' 'DATE2' %}".replace('DATE1',start_date.getTime()).replace('DATE2',end_date.getTime())
+        $.getJSON(url, {}, function(res, status) {
+          var labelList = []
+
+          res.invested.forEach(
+            (element) => {
+              labelList.push(Date.parse(element.x));
+            }
+          );
+
+          res.dividends.forEach(
+            (element) => {
+              labelList.push(Date.parse(element.x));
+            }
+          );
+          labelList.sort( (a,b) => {return a-b})
+          labelList = labelList.map( function(element) {
+             return new Date(element).toISOString().split('T')[0]
+            })
+
+          var data = {
+              labels: labelList,
+              datasets: [{
+                label: "Dividends",
+                backgroundColor: "rgba(255,255,255,0)",
+                borderColor: "rgba(99,132,255,1)",
+                borderWidth: 2,
+                hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                hoverBorderColor: "rgba(255,99,132,1)",
+                data: res.dividends
+              },{
+                label: "Invested",
+                backgroundColor: "rgba(255,255,255,0)",
+                borderColor: "rgba(132,99,255,1)",
+                borderWidth: 2,
+                hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                hoverBorderColor: "rgba(255,99,132,1)",
+                data: res.invested
+              },{
+                label: "Total Value",
+                backgroundColor: "rgba(255,255,255,0)",
+                borderColor: "rgba(255,99,132,1)",
+                borderWidth: 2,
+                hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                hoverBorderColor: "rgba(255,99,132,1)",
+                data: res.totalValue,
+              }]
+            };
+
+            var option = {
+              scales: {
+                yAxes: [{
+                  stacked: false,
+                  gridLines: {
+                    display: true,
+                    color: "rgba(255,99,132,0.2)"
+                  }
+                }],
+                xAxes: [{
+                  gridLines: {
+                    display: false
+                  }
+                }]
+              }
+            };
+
+            var ctx = document.getElementById("balanceChart").getContext('2d');
+            var myChart = new Chart(ctx, {
+              type: 'line',
+              options: {
+                  scales: {
+                      yAxes: [{
+                          ticks: {
+                              beginAtZero: false
+                          }
+                      }]
+                  }
+              },
+              data: data
+            });
+        });
+    }
+</script>
 {% endblock %}
