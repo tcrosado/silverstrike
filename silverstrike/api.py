@@ -164,18 +164,18 @@ def get_investment_overview_data(request, dstart, dend):
         else:
             data['y'] = list(acc[operation.operation_type].values())[-1]['y'] + (operation.price * operation.quantity)
 
-        tracked_quatities.setdefault(operation.isin, 0)
+        tracked_quatities.setdefault(operation.security, 0)
 
         if operation.operation_type == InvestmentOperation.SELL:
             data['y'] *= -1
-            tracked_quatities[operation.isin] = tracked_quatities.get(operation.isin) - operation.quantity
+            tracked_quatities[operation.security] = tracked_quatities.get(operation.security) - operation.quantity
         elif operation.operation_type == InvestmentOperation.BUY:
-            tracked_quatities[operation.isin] = tracked_quatities.get(operation.isin) + operation.quantity
+            tracked_quatities[operation.security] = tracked_quatities.get(operation.security) + operation.quantity
 
         acc[operation.operation_type][operation.date] = data
 
         #set quantitites
-        isin = operation.isin
+        isin = operation.security.isin
         quantities.setdefault(isin, 0)
         if operation.operation_type == InvestmentOperation.SELL:
             quantities[isin] -= operation.quantity
