@@ -110,5 +110,3 @@ coverage
 .vscode
 
 demo/db\.sqlite3\.stable
-
-demo/
