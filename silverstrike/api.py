@@ -6,7 +6,8 @@ from django.db import models
 from django.http import JsonResponse
 
 from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation, SecurityQuantity, \
-    SecurityDistribution, SecurityRegionTarget
+    SecurityDistribution, SecurityRegionTarget, SecurityTypeTarget
+from .utils.AssetTypeWeightCalculator import AssetTypeWeightCalculator
 from .utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 
 
@@ -277,5 +278,38 @@ def get_stock_distribution_target_data(request):
         distribution[key] += target.allocation
     data = dict()
     data['labels'] = list(distribution.keys())
+    data['data'] = list(distribution.values())
+    return JsonResponse(data)
+
+@login_required
+def get_asset_distribution_data(request):
+    #FIXME check user permissions
+    asset_distribution = AssetTypeWeightCalculator().calculate_weights()
+    data = dict()
+    distribution = dict()
+
+    for security_type in asset_distribution:
+        distribution.setdefault(security_type, 0)
+        distribution[security_type] += asset_distribution[security_type]
+    data['labels'] = list(distribution.keys())
+    data['data'] = list(distribution.values())
+    return JsonResponse(data)
+
+@login_required
+def get_asset_distribution_target_data(request):
+    #FIXME check user permissions
+    asset_distribution_target = SecurityTypeTarget.objects.all() #FIXME
+    data = dict()
+    data['labels'] = []
+
+    distribution = dict()
+    distribution.setdefault(SecurityDetails.REIT,0)
+    distribution.setdefault(SecurityDetails.STOCK,0)
+    distribution.setdefault(SecurityDetails.BOND,0)
+    for target in asset_distribution_target:
+        security_type = target.security_type
+        distribution[security_type] += target.allocation
+        data['labels'].append(SecurityDetails.SECURITY_TYPES[security_type][1])
+
     data['data'] = list(distribution.values())
     return JsonResponse(data)
