@@ -54,7 +54,8 @@
 <div class="col-md-6">
   <div class="box">
     <div class="box-body">
-      <canvas id="distributionChart2" width="400" height="200"></canvas>
+      <canvas id="assetDistributionChart" width="400" height="200"></canvas>
+      <p style="font-size: 7pt;">Weight Percentage (Difference to target)</p>
     </div>
   </div>
 </div>
@@ -65,7 +66,7 @@
       <p style="font-size: 7pt;">Weight Percentage (Difference to target)</p>
     </div>
   </div>
-  </div>
+</div>
 <div class="row">
 {% for securityType,securityList in securities.items %}
 <div class="col-md-12">
@@ -181,6 +182,7 @@
     </div>
   </div>
 </div>
+
 {% endblock %}
 {% block scripts %}
 
@@ -192,7 +194,8 @@
     date_start.setMonth(date_start.getMonth() - 12)
 
     drawGraphic(date_start,date_now)
-    drawDistribution()
+    drawStockDistribution()
+    drawAssetDistribution()
 
     $("#12month").click( (event) => {
         var date_now = new Date();
@@ -299,16 +302,56 @@
         });
     }
 
-    function getRandomColor() {
-        var letters = '0123456789ABCDEF';
-        var color = '#';
-        for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
+    function drawAssetDistribution() {
+        var date_now = new Date()
+        var date_start = new Date()
+        date_start.setMonth(date_start.getMonth() - 12)
+        var url ="{% url 'api_investment_asset_distribution_data' %}"
+        var url_target ="{% url 'api_investment_asset_distribution_target_data' %}"
+        $.getJSON(url, {}, function(current_response, status) {
+          $.getJSON(url_target, {}, function(target_response, status) {
+            var ctx = document.getElementById("assetDistributionChart").getContext('2d');
+            var myChart = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: current_response.labels,
+                datasets: [{
+                  backgroundColor: [
+                    '#ff9900',
+                    '#dc3912',
+                    '#3366cc'
+                  ],
+                  data: current_response.data
+                }]
+              },
+              options: {    
+                title: {
+                  display: true,
+                  text: "Assets"
+                },
+                legend: {
+                  position: 'left'
+                },
+                plugins: {
+                  labels: {
+                    render: function (args) {
+                      var index = target_response.labels.indexOf(args.label)
+                      var delta = args.value - target_response.data[index]
+                      return args.value.toFixed(1) + "%\n ("+delta.toFixed(1)+"%)";
+                    },
+                    fontColor: 'black',
+                    fontStyle: 'bold',
+                    precision: 2
+                  }
+                }
+              }
+            });
+          });
+        });
     }
 
-    function drawDistribution() {
+    function drawStockDistribution() {
+      //FIXME refactor
         var date_now = new Date()
         var date_start = new Date()
         date_start.setMonth(date_start.getMonth() - 12)
@@ -343,7 +386,7 @@
                     render: function (args) {
                       var index = target_response.labels.indexOf(args.label)
                       var delta = args.value - target_response.data[index]
-                      return args.value + "%\n ("+delta.toFixed(1)+"%)";
+                      return args.value.toFixed(1) + "%\n ("+delta.toFixed(1)+"%)";
                     },
                     fontColor: 'black',
                     fontStyle: 'bold',

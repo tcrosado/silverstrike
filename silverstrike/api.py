@@ -299,17 +299,14 @@ def get_asset_distribution_data(request):
 def get_asset_distribution_target_data(request):
     #FIXME check user permissions
     asset_distribution_target = SecurityTypeTarget.objects.all() #FIXME
-    data = dict()
-    data['labels'] = []
 
     distribution = dict()
-    distribution.setdefault(SecurityDetails.REIT,0)
-    distribution.setdefault(SecurityDetails.STOCK,0)
-    distribution.setdefault(SecurityDetails.BOND,0)
     for target in asset_distribution_target:
         security_type = target.security_type
-        distribution[security_type] += target.allocation
-        data['labels'].append(SecurityDetails.SECURITY_TYPES[security_type][1])
-
+        type_name = SecurityDetails.SECURITY_TYPES[security_type][1]
+        distribution.setdefault(type_name, 0)
+        distribution[type_name] += target.allocation
+    data = dict()
+    data['labels'] = list(distribution.keys())
     data['data'] = list(distribution.values())
     return JsonResponse(data)
