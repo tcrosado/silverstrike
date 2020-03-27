@@ -232,10 +232,10 @@ def get_stock_distribution_data(request):
     developed_key = "Developed"
     emerging_key = "Emerging"
 
-    data = dict()
-    data.setdefault(north_america_key,0)
-    data.setdefault(developed_key,0)
-    data.setdefault(emerging_key,0)
+    distribution = dict()
+    distribution.setdefault(north_america_key,0)
+    distribution.setdefault(developed_key,0)
+    distribution.setdefault(emerging_key,0)
     for region_id in region_distribution:
         key = None
         if region_id in north_america:
@@ -244,8 +244,10 @@ def get_stock_distribution_data(request):
             key = developed_key
         elif region_id in emerging:
             key = emerging_key
-        data[key] += region_distribution[region_id]
-
+        distribution[key] += region_distribution[region_id]
+    data = dict()
+    data['labels'] = list(distribution.keys())
+    data['data'] = list(distribution.values())
     return JsonResponse(data)
 
 @login_required
@@ -259,10 +261,10 @@ def get_stock_distribution_target_data(request):
     developed_key = "Developed"
     emerging_key = "Emerging"
 
-    data = dict()
-    data.setdefault(north_america_key,0)
-    data.setdefault(developed_key,0)
-    data.setdefault(emerging_key,0)
+    distribution = dict()
+    distribution.setdefault(north_america_key,0)
+    distribution.setdefault(developed_key,0)
+    distribution.setdefault(emerging_key,0)
     for target in region_distribution_target:
         region_id = target.region_id
         key = None
@@ -272,6 +274,8 @@ def get_stock_distribution_target_data(request):
             key = developed_key
         elif region_id in emerging:
             key = emerging_key
-        data[key] += target.allocation
-
+        distribution[key] += target.allocation
+    data = dict()
+    data['labels'] = list(distribution.keys())
+    data['data'] = list(distribution.values())
     return JsonResponse(data)
