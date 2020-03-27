@@ -5,7 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.http import JsonResponse
 
-from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation, SecurityQuantity
+from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation, SecurityQuantity, \
+    SecurityDistribution, SecurityRegionTarget
+from .utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 
 
 @login_required
@@ -217,3 +219,59 @@ def get_investment_overview_data(request, dstart, dend):
     # TODO edit operations
     # TODO Add total networth tracker
     return JsonResponse({'dividends': dividends, 'totalValue': total_value, 'invested': invested})
+
+
+@login_required
+def get_stock_distribution_data(request):
+    #FIXME check user permissions
+    region_distribution = RegionDistributionWeightCalculator().calculate_weights()
+    north_america = [SecurityDistribution.NA]
+    developed = [SecurityDistribution.UK, SecurityDistribution.EZ, SecurityDistribution.EUEZ, SecurityDistribution.JP, SecurityDistribution.AU]
+    emerging = [SecurityDistribution.LA,SecurityDistribution.EUEM,SecurityDistribution.AF,SecurityDistribution.ME,SecurityDistribution.AD,SecurityDistribution.AE]
+    north_america_key = "North America"
+    developed_key = "Developed"
+    emerging_key = "Emerging"
+
+    data = dict()
+    data.setdefault(north_america_key,0)
+    data.setdefault(developed_key,0)
+    data.setdefault(emerging_key,0)
+    for region_id in region_distribution:
+        key = None
+        if region_id in north_america:
+            key = north_america_key
+        elif region_id in developed:
+            key = developed_key
+        elif region_id in emerging:
+            key = emerging_key
+        data[key] += region_distribution[region_id]
+
+    return JsonResponse(data)
+
+@login_required
+def get_stock_distribution_target_data(request):
+    #FIXME check user permissions
+    region_distribution_target = SecurityRegionTarget.objects.all() #FIXME
+    north_america = [SecurityDistribution.NA]
+    developed = [SecurityDistribution.UK, SecurityDistribution.EZ, SecurityDistribution.EUEZ, SecurityDistribution.JP, SecurityDistribution.AU]
+    emerging = [SecurityDistribution.LA,SecurityDistribution.EUEM,SecurityDistribution.AF,SecurityDistribution.ME,SecurityDistribution.AD,SecurityDistribution.AE]
+    north_america_key = "North America"
+    developed_key = "Developed"
+    emerging_key = "Emerging"
+
+    data = dict()
+    data.setdefault(north_america_key,0)
+    data.setdefault(developed_key,0)
+    data.setdefault(emerging_key,0)
+    for target in region_distribution_target:
+        region_id = target.region_id
+        key = None
+        if region_id in north_america:
+            key = north_america_key
+        elif region_id in developed:
+            key = developed_key
+        elif region_id in emerging:
+            key = emerging_key
+        data[key] += target.allocation
+
+    return JsonResponse(data)
