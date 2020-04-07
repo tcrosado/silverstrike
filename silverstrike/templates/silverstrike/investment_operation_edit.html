@@ -83,6 +83,15 @@
           {% endfor %}
         </div>
       </div>
+      <div class="form-group{% if form.exchange_rate.errors %} has-error{% endif %}" id="exchangeRate">
+        <label class="col-sm-2 control-label" for="{{ form.exchange_rate.id_for_label }}">{{ form.exchange_rate.label }}</label>
+        <div class="col-sm-8">
+          {{ form.exchange_rate|add_class:"form-control" }}
+          {% for error in form.exchange_rate.errors %}
+          <span class="help-block">{{ error }}</span>
+          {% endfor %}
+        </div>
+      </div>
       <div class="form-group{% if form.category.errors %} has-error{% endif %}">
         <label class="col-sm-2 control-label" for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
         <div class="col-sm-8">
@@ -107,6 +116,7 @@
           {{ form.transaction_type|add_class:"form-control" }}
           {% for error in form.transaction_type.errors %}
           <span class="help-block">{{ error }}</span>
+          <!-- FIXME add currency -->
           {% endfor %}
         </div>
       </div>
@@ -143,6 +153,21 @@ $(function() {
       });
   }
   $('.date-input').attr('autocomplete', 'off');
+  var url = '{% url 'api_security_currency' 'isin'%}';
+  $('#id_security').change(function(){
+    var isin =  $(this).val();
+    var url_with_isin = url.replace('isin', isin)
+    $.when( $.getJSON(url_with_isin), $.getJSON('{% url 'api_investment_preferences' %}')).then(function (security_currency, preferred_currency) {
+        var exchangeField = $('#exchangeRate');
+        if(security_currency[0].currency == preferred_currency[0].currency){
+          exchangeField.hide();
+          $('#id_exchange_rate').val('');
+        } else {
+          exchangeField.show();
+        }
+    });
+  });
+
 })
 </script>
 {% endblock %}

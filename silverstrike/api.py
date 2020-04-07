@@ -6,7 +6,7 @@ from django.db import models
 from django.http import JsonResponse
 
 from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation, SecurityQuantity, \
-    SecurityDistribution, SecurityRegionTarget, SecurityTypeTarget
+    SecurityDistribution, SecurityRegionTarget, SecurityTypeTarget, CurrencyPreference
 from .utils.AssetTypeWeightCalculator import AssetTypeWeightCalculator
 from .utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 
@@ -215,7 +215,6 @@ def get_investment_overview_data(request, dstart, dend):
         data_point = get_total_security_prices_datapoints(merged_cumulative_quantities[date].items())
         total_value.append(data_point)
     # TODO Different currencies
-    # TODO not allowed buy/sell when market closed
     # TODO change graph based on buttons
     # TODO edit operations
     # TODO Add total networth tracker
@@ -309,4 +308,24 @@ def get_asset_distribution_target_data(request):
     data = dict()
     data['labels'] = list(distribution.keys())
     data['data'] = list(distribution.values())
+    return JsonResponse(data)
+
+@login_required
+def get_security_currency(request,isin):
+    #FIXME check user permissions
+    security_details = SecurityDetails.objects.get(isin=isin)
+    data = dict()
+    data['isin'] = security_details.isin
+    data['currency'] = security_details.currency
+    return JsonResponse(data)
+
+
+@login_required
+def get_preferences(request):
+    #FIXME check user permissions
+    user = request.user
+    preferences = CurrencyPreference.objects.get(user=user)
+    data = dict()
+    data['user_id'] = user.pk
+    data['currency'] = CurrencyPreference.CURRENCIES[preferences.preferred_currency][1]
     return JsonResponse(data)

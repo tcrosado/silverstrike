@@ -501,6 +501,7 @@ class InvestmentOperation(models.Model):
     category = models.CharField(max_length=64, null=True)  # FIXME
     quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    exchange_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     transaction_id = models.ForeignKey('Transaction', models.CASCADE,
     related_name='transaction',  blank=False, null=False)
 

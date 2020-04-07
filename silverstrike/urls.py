@@ -21,7 +21,6 @@ from silverstrike.views import investments as investment_views
 router = routers.DefaultRouter()
 router.register(r'accounts', rest_views.AccountViewSet)
 router.register(r'transactions', rest_views.TransactionViewSet)
-#FIXME router.register(r'investments', rest_views.InvestmentViewSet)
 router.register(r'categories', rest_views.CategoryViewSet)
 router.register(r'recurrences', rest_views.RecurringTransactionsViewset)
 
@@ -139,6 +138,10 @@ urlpatterns = [
     path('reports/', report_views.ReportView.as_view(), name='reports'),
     path('reports/income-expense', report_views.IncomeExpenseReport.as_view(),
          name='income_expense_report'),
+    path('api/investment/preferences', api.get_preferences,
+         name='api_investment_preferences'),
+    path('api/investment/<str:isin>/currency', api.get_security_currency,
+         name='api_security_currency'),
     path('api/investment/security/<str:isin>/price/<dstart>/<dend>/',
          api.get_security_prices, name='api_security_prices'),
     path('api/investment/overview/<dstart>/<dend>/',

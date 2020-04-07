@@ -247,7 +247,7 @@ class ExportForm(forms.Form):
 class InvestmentOperationForm(forms.ModelForm):
     class Meta:
         model = models.InvestmentOperation
-        fields = [ 'account', 'security', 'quantity', 'date', 'price', 'category',
+        fields = [ 'account', 'security', 'quantity', 'date', 'price','exchange_rate', 'category',
                   'operation_type']
 
     account = forms.ModelChoiceField(queryset=models.Account.objects.filter(
@@ -258,12 +258,13 @@ class InvestmentOperationForm(forms.ModelForm):
     price = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
     category = forms.ModelChoiceField(
         queryset=models.Category.objects.exclude(active=False).order_by('name'), required=False)
+    exchange_rate = forms.DecimalField(max_digits=10, decimal_places=2, min_value=0.01, required=False) #FIXME check on backend receive
     operation_type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
     date = forms.DateField(required=False)
 
     def save(self, commit=True):
         dst = models.Account.objects.get(account_type=models.Account.SYSTEM)
-        src = self.cleaned_data['account'] 
+        src = self.cleaned_data['account']
         category = self.cleaned_data['category']
         operation_type = self.cleaned_data['operation_type']
         unit_price = self.cleaned_data['price']
@@ -271,11 +272,18 @@ class InvestmentOperationForm(forms.ModelForm):
         security = self.cleaned_data['security']
         total_price = quantity * unit_price
         date = self.cleaned_data['date']
-        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['security'].ticker)+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
+
+        if 'exchange_rate' in self.cleaned_data:
+            exchange_rate = self.cleaned_data['exchange_rate']
+            total_price = quantity * unit_price * exchange_rate
+        else:
+            exchange_rate = None
+
+        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['security'].ticker)+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price']) #FIXME add currency and exchange rate
 
         transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
         if operation_type == str(models.InvestmentOperation.BUY):
-            origin_acount = src
+            origin_account = src
             destination_account = dst
 
             if src.balance < total_price:
@@ -289,7 +297,7 @@ class InvestmentOperationForm(forms.ModelForm):
                 models.SecurityQuantity.objects.create(account = src, security= security, quantity = quantity)
 
         elif operation_type == str(models.InvestmentOperation.SELL):
-            origin_acount = dst
+            origin_account = dst
             destination_account = src
 
             try:
@@ -308,7 +316,7 @@ class InvestmentOperationForm(forms.ModelForm):
 
                     try:
                         securitySale = models.SecuritySale.objects.get(original_operation_id=order)
-                            # 1         10
+                        # 1         10
                         if securitySale.quantity < order.quantity:
                             # 9
                             difference = order.quantity - securitySale.quantity
@@ -333,7 +341,7 @@ class InvestmentOperationForm(forms.ModelForm):
                 raise forms.ValidationError("The account does not own that many securities")
 
         elif operation_type == str(models.InvestmentOperation.DIV):
-            origin_acount = dst
+            origin_account = dst
             destination_account = src
             try:
                 securityQuantity = models.SecurityQuantity.objects.get(account=src, security =security)
@@ -343,16 +351,17 @@ class InvestmentOperationForm(forms.ModelForm):
                 raise forms.ValidationError("The account does not own that many securities")
         else:
             raise ValueError('Invalid operation type selected')
-
+        #FIXME on tx delete investment operation deleted but SecurityQuantity not updated
         investmentOperation = models.InvestmentOperation.objects.create(date=date,
                                                                         price=unit_price, account=src,
                                                                         operation_type=operation_type,
                                                                         security=security, category=category, quantity=quantity,
+                                                                        exchange_rate=exchange_rate,
                                                                         transaction_id=transaction)
 
         models.Split.objects.update_or_create(
             transaction=transaction, amount__lt=0,
-            defaults={'amount': -total_price, 'account': origin_acount,
+            defaults={'amount': -total_price, 'account': origin_account,
                       'opposing_account': destination_account, 'date': date,
                       'title': transaction.title,
                       'category': category})
@@ -360,7 +369,7 @@ class InvestmentOperationForm(forms.ModelForm):
         models.Split.objects.update_or_create(
             transaction=transaction, amount__gt=0,
             defaults={'amount': total_price, 'account': destination_account,
-                      'opposing_account': origin_acount, 'date': date,
+                      'opposing_account': origin_account, 'date': date,
                       'title': transaction.title,
                       'category': category})
 
