@@ -208,7 +208,6 @@ class InvestmentCalculatorView(LoginRequiredMixin, generic.TemplateView):
         if len(data.keys()) != 0:
             # TODO check amount and operation exists
             # TODO set operation on html select
-            # TODO save button
             # TODO edit Operations/ Tx
             # TODO add balance to investment Operations
             # TODO dont assume dictionaries are ordered (template)

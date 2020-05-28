@@ -5,6 +5,7 @@ from silverstrike.models import SecurityDetails, SecurityTypeTarget, SecurityReg
 from silverstrike.utils.AssetTypeWeightCalculator import AssetTypeWeightCalculator
 from silverstrike.utils.BondMaturityWeightCalculator import BondMaturityWeightCalculator
 from silverstrike.utils.PriceGetter import PriceGetter
+from silverstrike.utils.PriceGetterWPreference import PriceGetterWPreference
 from silverstrike.utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 from silverstrike.utils.SecurityQuantityGetter import SecurityQuantityGetter
 from silverstrike.utils.SecurityQuantityMutableGetter import SecurityQuantityMutableGetter
@@ -13,7 +14,7 @@ from silverstrike.utils.SecurityQuantityMutableGetter import SecurityQuantityMut
 class InvestmentCalculator:
 
     def __init__(self, user_id):
-        self.price_getter = PriceGetter()
+        self.price_getter = PriceGetterWPreference()
         self.security_quantity_getter = SecurityQuantityMutableGetter()
         self.region_weight_calculator = RegionDistributionWeightCalculator(self.security_quantity_getter)
         self.bond_weight_calculator = BondMaturityWeightCalculator(self.security_quantity_getter)

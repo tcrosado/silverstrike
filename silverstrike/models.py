@@ -460,8 +460,9 @@ class RecurringTransaction(models.Model):
                     outstanding += t.amount
                 t.update_date()
         return outstanding
-
-
+######################################################
+#       Investment Data
+######################################################
 
 class SecurityDetails(models.Model):
     STOCK = 0
@@ -477,7 +478,7 @@ class SecurityDetails(models.Model):
     name = models.CharField(max_length=64)
     ticker = models.CharField(max_length=64)
     exchange = models.CharField(max_length=64)
-    currency = models.CharField(max_length=3)
+    currency = models.CharField(max_length=3) #TODO tie to config?
     security_type = models.IntegerField(choices=SECURITY_TYPES, default=STOCK)
     ter = models.FloatField(default=0.0)
 
@@ -600,10 +601,14 @@ class SecurityBondMaturity(models.Model):
 
 
 class SecurityPrice(models.Model):
-    ticker = models.CharField(max_length=12)
+    ticker = models.CharField(max_length=12) # TODO tie this to ticker on SecurityDetails
     date = models.DateField(default=date.today)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+class CurrencyPairPrice(models.Model):
+    pair = models.CharField(max_length=6) # e.g. EUR USD
+    date = models.DateField(default=date.today)
+    price = models.DecimalField(max_digits=10, decimal_places=4)
 
 #################################
 # Investment Target

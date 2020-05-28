@@ -5,8 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.http import JsonResponse
 
+from .lib import update_currency_pair
 from .models import Account, Split, SecurityPrice, SecurityDetails, InvestmentOperation, SecurityQuantity, \
-    SecurityDistribution, SecurityRegionTarget, SecurityTypeTarget, CurrencyPreference
+    SecurityDistribution, SecurityRegionTarget, SecurityTypeTarget, CurrencyPreference, CurrencyPairPrice
 from .utils.AssetTypeWeightCalculator import AssetTypeWeightCalculator
 from .utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 
@@ -214,7 +215,6 @@ def get_investment_overview_data(request, dstart, dend):
     if today not in keys:
         data_point = get_total_security_prices_datapoints(merged_cumulative_quantities[date].items())
         total_value.append(data_point)
-    # TODO Different currencies
     # TODO change graph based on buttons
     # TODO edit operations
     # TODO Add total networth tracker
