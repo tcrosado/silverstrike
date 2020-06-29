@@ -262,6 +262,10 @@ class InvestmentOperationForm(forms.ModelForm):
     operation_type = forms.ChoiceField(choices=models.InvestmentOperation.OPERATION_TYPES, required=True)
     date = forms.DateField(required=False)
 
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super(InvestmentOperationForm, self).__init__(*args, **kwargs)
+
     def save(self, commit=True):
         dst = models.Account.objects.get(account_type=models.Account.SYSTEM)
         src = self.cleaned_data['account']
@@ -279,7 +283,11 @@ class InvestmentOperationForm(forms.ModelForm):
         else:
             exchange_rate = None
 
-        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['security'].ticker)+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price']) #FIXME add currency and exchange rate
+        title = str(models.InvestmentOperation.OPERATION_TYPES[int(operation_type)][1])+" "+str(self.cleaned_data['security'].ticker)+" "+str(self.cleaned_data['quantity'])+"@"+str(self.cleaned_data['price'])
+        if exchange_rate is not None:
+            preference = models.CurrencyPreference.objects.get(user=self.user)
+            iso_currency = models.CurrencyPreference.CURRENCIES[preference.preferred_currency][1]
+            title += "@"+exchange_rate+" "+iso_currency
 
         transaction = models.Transaction.objects.create(title=title,date=date,transaction_type=Transaction.TRANSFER,last_modified=date)
         if operation_type == str(models.InvestmentOperation.BUY):

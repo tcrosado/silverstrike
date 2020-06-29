@@ -22,7 +22,6 @@ from silverstrike.utils.RegionDistributionWeightCalculator import RegionDistribu
 from silverstrike.utils.SecurityOperationCalculationAdapter import SecurityOperationCalculationAdapter
 from silverstrike.utils.SecurityQuantityMutableGetter import SecurityQuantityMutableGetter
 
-
 class InvestmentView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investments.html'
 
@@ -547,7 +546,7 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu'] = 'security_details'
-        context['securityDetails'] = SecurityDetails.objects.get(pk=context['pk'])
+        context['securityDetails'] = SecurityDetails.objects.get(pk=str(context['pk']))
         last_price = SecurityPrice.objects.order_by('date').last()
         context['securityPrice'] = last_price
         today = date.today()
