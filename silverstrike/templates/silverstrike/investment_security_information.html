@@ -46,7 +46,11 @@
           </td>
         </tr>
         <tr>
-          <th>{% trans 'Current Total' %}</th><td>{{ totalPrice }} {{ securityDetails.currency }}</td>
+          <th>{% trans 'Current Total' %}</th><td>{{ totalPrice }} {{ securityDetails.currency }}
+            {%if securityDetails.currency != defaultCurrency %}
+            ( {{defaultCurrencyTotalPrice |floatformat:2}} {{ defaultCurrency }} )  
+            {%endif%}
+          </td>
         </tr>
         <tr>
           <th>{% trans 'YTD Return' %}</th><td id="ytd_return" >0</td> <!-- TODO -->

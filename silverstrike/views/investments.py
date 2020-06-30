@@ -580,7 +580,7 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
         context['defaultCurrency'] = CurrencyPreference.CURRENCIES[currency][1]
         isin = context['securityDetails'].isin
         context['defaultCurrencyPrice'] = PriceGetterWPreference(user_id).get_latest_prices([isin])[isin]
-
+        context['defaultCurrencyTotalPrice'] = context['defaultCurrencyPrice'] * assets
         return context
 
     # FIXME switch to api
