@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 
-from silverstrike.lib import update_security_price
+from silverstrike.lib import update_security_price,update_currency_pair
 from silverstrike.models import InvestmentOperation, SecurityDetails, SecurityQuantity, SecurityDistribution, \
     SecurityPrice, SecurityTypeTarget, SecurityRegionTarget, SecurityBondMaturityTarget, SecurityBondRegionTarget, \
     SecuritySale, SecurityBondMaturity, CurrencyPreference
@@ -18,6 +18,7 @@ from silverstrike.utils.BondMaturityWeightCalculator import BondMaturityWeightCa
 from silverstrike.utils.InvestmentCalculator import InvestmentCalculator
 from silverstrike.utils.InvestmentWeightCalculator import InvestmentWeightCalculator
 from silverstrike.utils.PriceGetter import PriceGetter
+from silverstrike.utils.PriceGetterWPreference import PriceGetterWPreference
 from silverstrike.utils.RegionDistributionWeightCalculator import RegionDistributionWeightCalculator
 from silverstrike.utils.SecurityOperationCalculationAdapter import SecurityOperationCalculationAdapter
 from silverstrike.utils.SecurityQuantityMutableGetter import SecurityQuantityMutableGetter
@@ -544,13 +545,13 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_security_information.html'
 
     def get_context_data(self, **kwargs):
+        user_id = self.request.user.id
         context = super().get_context_data(**kwargs)
         context['menu'] = 'security_details'
-        context['securityDetails'] = SecurityDetails.objects.get(pk=str(context['pk']))
+        context['securityDetails'] = SecurityDetails.objects.get(pk=str(context['pk'])) #TODO filter by user
         last_price = SecurityPrice.objects.order_by('date').last()
         context['securityPrice'] = last_price
         today = date.today()
-        # TODO fix year
         begining = datetime.strptime(str(today.year), '%Y')
 
         context['dates'] = [begining.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d")]
@@ -574,12 +575,25 @@ class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
             price_distribution.append(context['totalPrice'] * decimal.Decimal(region.allocation / 100))
         context['securityDistributionPrice'] = price_distribution
 
+        default_currency_config = CurrencyPreference.objects.get(user=user_id)
+        currency = default_currency_config.preferred_currency
+        context['defaultCurrency'] = CurrencyPreference.CURRENCIES[currency][1]
+        isin = context['securityDetails'].isin
+        context['defaultCurrencyPrice'] = PriceGetterWPreference(user_id).get_latest_prices([isin])[isin]
+
         return context
 
     # FIXME switch to api
     def post(self, request, *args, **kwargs):
+        user_id = request.user.id
         context = super().get_context_data(**kwargs)
         security_id = context['pk']
         security = SecurityDetails.objects.get(pk=security_id)
+        
         update_security_price(security.ticker)
+
+        default_currency_config = CurrencyPreference.objects.get(user=user_id)
+        currency = default_currency_config.preferred_currency
+        if CurrencyPreference.CURRENCIES[currency][1] != security.currency:
+            update_currency_pair(security.currency,CurrencyPreference.CURRENCIES[currency][1])
         return HttpResponseRedirect(reverse('investment_security_details', args=[security_id]))

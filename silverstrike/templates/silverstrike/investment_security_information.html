@@ -39,16 +39,20 @@
           <th>{% trans 'Current Assets' %}</th><td>{{ currentAssets }}</td>
         </tr>
         <tr>
-          <th>{% trans 'Current Price' %}</th><td>{{ securityPrice.price }} €</td>
+          <th>{% trans 'Current Price' %}</th><td>{{ securityPrice.price }} {{ securityDetails.currency }}
+            {%if securityDetails.currency != defaultCurrency %}
+            ( {{defaultCurrencyPrice |floatformat:2}} {{ defaultCurrency }} )  
+            {%endif%}
+          </td>
         </tr>
         <tr>
-          <th>{% trans 'Current Total' %}</th><td>{{ totalPrice }} €</td>
+          <th>{% trans 'Current Total' %}</th><td>{{ totalPrice }} {{ securityDetails.currency }}</td>
         </tr>
         <tr>
-          <th>{% trans 'YTD Return' %}</th><td id="ytd_return" >0</td>
+          <th>{% trans 'YTD Return' %}</th><td id="ytd_return" >0</td> <!-- TODO -->
         </tr>
         <tr>
-          <th>{% trans 'Total Return' %}</th><td id="total_return">0</td>
+          <th>{% trans 'Total Return' %}</th><td id="total_return">0</td> <!-- TODO -->
         </tr>
         </table>
       </div>
