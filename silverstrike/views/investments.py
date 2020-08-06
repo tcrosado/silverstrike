@@ -540,6 +540,7 @@ class SecurityDistributionCreate(LoginRequiredMixin, generic.edit.FormView):  # 
 
 # TODO Last Operations Security view
 # TODO new Operation ISIN
+# TODO bug on new investment operations
 
 class SecurityDetailsInformation(LoginRequiredMixin, generic.TemplateView):
     template_name = 'silverstrike/investment_security_information.html'
